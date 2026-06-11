@@ -1,0 +1,320 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Design Tokens ──────────────────────────────────────────────────── */
+:root {
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-light: #EFF6FF;
+  --accent-dark: #1E3A8A;
+
+  --income: #16A34A;
+  --expense: #EF4444;
+  --transfer: #2563EB;
+
+  --nav-height: 64px;
+  --sheet-max-height: 92vh;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 150ms ease;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent layout shift from scrollbar */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* ─── App Shell ───────────────────────────────────────────────────────────── */
+#root {
+  @apply min-h-screen flex flex-col;
+}
+
+.app-container {
+  @apply flex-1 overflow-y-auto;
+  padding-bottom: var(--nav-height);
+}
+
+/* ─── Bottom Nav ─────────────────────────────────────────────────────────── */
+.bottom-nav {
+  height: var(--nav-height);
+  @apply fixed bottom-0 inset-x-0 z-40;
+  @apply flex items-center justify-around;
+  @apply border-t;
+}
+
+.nav-item {
+  @apply flex flex-col items-center justify-center gap-0.5;
+  @apply text-xs font-medium;
+  @apply transition-all duration-150;
+  @apply w-16 h-14;
+  @apply rounded-xl;
+}
+
+/* ─── Cards ──────────────────────────────────────────────────────────────── */
+.card {
+  @apply rounded-2xl p-4;
+  @apply border border-slate-200 dark:border-slate-700;
+  @apply bg-white dark:bg-slate-800;
+}
+
+.card-sm {
+  @apply rounded-xl p-3;
+  @apply border border-slate-200 dark:border-slate-700;
+  @apply bg-white dark:bg-slate-800;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────────────── */
+.btn-primary {
+  @apply w-full py-4 rounded-2xl;
+  @apply bg-blue-600 hover:bg-blue-700 active:bg-blue-800;
+  @apply text-white font-semibold text-base;
+  @apply transition-colors duration-150;
+  @apply disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+.btn-ghost {
+  @apply px-4 py-2 rounded-xl;
+  @apply text-slate-600 dark:text-slate-300;
+  @apply hover:bg-slate-100 dark:hover:bg-slate-700;
+  @apply transition-colors duration-150;
+  @apply font-medium text-sm;
+}
+
+.btn-danger {
+  @apply w-full py-4 rounded-2xl;
+  @apply bg-red-500 hover:bg-red-600;
+  @apply text-white font-semibold text-base;
+  @apply transition-colors duration-150;
+}
+
+/* ─── Type Tabs ──────────────────────────────────────────────────────────── */
+.type-tab {
+  @apply flex-1 py-2.5 rounded-xl text-sm font-semibold;
+  @apply transition-all duration-150;
+}
+
+.type-tab-income {
+  @apply bg-green-500 text-white;
+}
+
+.type-tab-expense {
+  @apply bg-red-500 text-white;
+}
+
+.type-tab-transfer {
+  @apply bg-blue-500 text-white;
+}
+
+.type-tab-inactive {
+  @apply text-slate-500 dark:text-slate-400;
+  @apply hover:bg-slate-100 dark:hover:bg-slate-700;
+}
+
+/* ─── Amount Display ─────────────────────────────────────────────────────── */
+.amount-display {
+  @apply text-5xl font-bold tracking-tight text-center;
+  @apply text-slate-900 dark:text-white;
+  font-feature-settings: 'tnum';
+}
+
+/* ─── Numpad ─────────────────────────────────────────────────────────────── */
+.numpad-btn {
+  @apply flex items-center justify-center;
+  @apply h-14 rounded-2xl;
+  @apply text-xl font-semibold;
+  @apply transition-all duration-100 active:scale-95;
+  @apply select-none;
+  @apply bg-slate-100 dark:bg-slate-700;
+  @apply text-slate-800 dark:text-slate-100;
+  @apply hover:bg-slate-200 dark:hover:bg-slate-600;
+}
+
+.numpad-btn-accent {
+  @apply bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600;
+}
+
+.numpad-btn-danger {
+  @apply bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400;
+}
+
+/* ─── Account Pill ───────────────────────────────────────────────────────── */
+.account-pill {
+  @apply flex items-center gap-2 px-3 py-2 rounded-full;
+  @apply border border-slate-200 dark:border-slate-600;
+  @apply text-sm font-medium whitespace-nowrap;
+  @apply transition-all duration-150;
+  @apply cursor-pointer select-none;
+}
+
+.account-pill-selected {
+  @apply border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300;
+}
+
+/* ─── Category Tile ──────────────────────────────────────────────────────── */
+.cat-tile {
+  @apply flex flex-col items-center justify-center gap-1.5;
+  @apply p-2.5 rounded-2xl aspect-square;
+  @apply border border-transparent;
+  @apply text-xs font-medium text-center;
+  @apply transition-all duration-150 cursor-pointer;
+  @apply bg-slate-100 dark:bg-slate-700;
+}
+
+.cat-tile-selected {
+  @apply border-blue-600 bg-blue-50 dark:bg-blue-900/40;
+  @apply text-blue-700 dark:text-blue-300;
+}
+
+/* ─── Transaction Row ────────────────────────────────────────────────────── */
+.txn-row {
+  @apply flex items-center gap-3 py-3 px-4;
+  @apply border-b border-slate-100 dark:border-slate-700/50;
+  @apply last:border-b-0;
+  @apply transition-colors duration-150;
+  @apply hover:bg-slate-50 dark:hover:bg-slate-800/50;
+  @apply cursor-pointer;
+}
+
+/* ─── Toast ──────────────────────────────────────────────────────────────── */
+.toast {
+  @apply flex items-center gap-3 px-4 py-3 rounded-2xl;
+  @apply shadow-lg text-sm font-medium;
+  @apply animate-slide-up;
+}
+
+/* ─── Bottom Sheet ───────────────────────────────────────────────────────── */
+.sheet-overlay {
+  @apply fixed inset-0 z-50 bg-black/40 backdrop-blur-sm;
+  @apply transition-opacity duration-200;
+}
+
+.sheet-panel {
+  @apply fixed bottom-0 inset-x-0 z-50;
+  @apply bg-white dark:bg-slate-900;
+  @apply rounded-t-3xl;
+  @apply overflow-y-auto;
+  max-height: var(--sheet-max-height);
+}
+
+/* ─── Period Toggle ──────────────────────────────────────────────────────── */
+.period-btn {
+  @apply px-3 py-1.5 rounded-xl text-xs font-semibold;
+  @apply transition-all duration-150;
+}
+
+.period-btn-active {
+  @apply bg-blue-600 text-white;
+}
+
+.period-btn-inactive {
+  @apply text-slate-500 dark:text-slate-400;
+  @apply hover:bg-slate-100 dark:hover:bg-slate-800;
+}
+
+/* ─── Input ──────────────────────────────────────────────────────────────── */
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl;
+  @apply border border-slate-200 dark:border-slate-600;
+  @apply bg-slate-50 dark:bg-slate-800;
+  @apply text-slate-900 dark:text-white;
+  @apply text-sm font-medium;
+  @apply placeholder:text-slate-400 dark:placeholder:text-slate-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply transition-all duration-150;
+}
+
+/* ─── Section Label ──────────────────────────────────────────────────────── */
+.section-label {
+  @apply text-xs font-semibold uppercase tracking-widest;
+  @apply text-slate-400 dark:text-slate-500;
+  @apply mb-2;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.animate-slide-up  { animation: slide-up 0.2s ease-out; }
+.animate-slide-down { animation: slide-down 0.2s ease-out; }
+.animate-fade-in   { animation: fade-in 0.2s ease-out; }
+.animate-scale-in  { animation: scale-in 0.15s ease-out; }
+
+/* ─── Scrollbar Styling ──────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-600;
+  border-radius: 999px;
+}
+
+/* ─── FAB ────────────────────────────────────────────────────────────────── */
+.fab {
+  @apply w-14 h-14 rounded-full;
+  @apply bg-blue-600 text-white;
+  @apply flex items-center justify-center;
+  @apply shadow-lg shadow-blue-600/30;
+  @apply transition-all duration-150;
+  @apply active:scale-95 hover:bg-blue-700;
+}
+
+/* ─── Badge ──────────────────────────────────────────────────────────────── */
+.badge {
+  @apply text-xs font-semibold px-2 py-0.5 rounded-full;
+}
+
+/* ─── Net Worth Number ──────────────────────────────────────────────────── */
+.net-worth-amount {
+  @apply text-4xl font-bold tracking-tight;
+  font-feature-settings: 'tnum';
+}
+
+/* ─── Safe Area Support (iOS PWA) ────────────────────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app-container {
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
+  }
+}
