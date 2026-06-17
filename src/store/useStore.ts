@@ -48,7 +48,7 @@ interface KwentaKoStore {
   addCategory: (category: Category) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
-  reorderCategory: (id: string, direction: 'up' | 'down') => void;
+  reorderCategory: (sourceIndex: number, destinationIndex: number) => void;
 
   // ── Settings Actions
   updateSettings: (updates: Partial<AppSettings>) => void;
@@ -220,19 +220,16 @@ export const useStore = create<KwentaKoStore>()(
         supabase.from('categories').delete().eq('client_id', id).then(({ error }) => error && console.error(error));
       },
 
-      reorderCategory: (id, direction) => {
+      reorderCategory: (sourceIndex, destinationIndex) => {
         set((s) => {
           const cats = [...s.categories].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-          const idx = cats.findIndex(c => c.id === id);
-          if (idx === -1) return s;
           
-          if (direction === 'up' && idx > 0) {
-            [cats[idx - 1], cats[idx]] = [cats[idx], cats[idx - 1]];
-          } else if (direction === 'down' && idx < cats.length - 1) {
-            [cats[idx], cats[idx + 1]] = [cats[idx + 1], cats[idx]];
-          } else {
+          if (sourceIndex < 0 || sourceIndex >= cats.length || destinationIndex < 0 || destinationIndex >= cats.length) {
             return s;
           }
+          
+          const [moved] = cats.splice(sourceIndex, 1);
+          cats.splice(destinationIndex, 0, moved);
           
           const updatedCats = cats.map((c, i) => ({ ...c, sortOrder: i + 1 }));
           

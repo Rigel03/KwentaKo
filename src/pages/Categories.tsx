@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useStore } from '../store/useStore';
 import EmptyState from '../components/ui/EmptyState';
 import type { Category, CategoryType } from '../types';
@@ -111,18 +112,57 @@ const TYPE_OPTIONS: { id: CategoryType; label: string; color: string }[] = [
   { id: 'both',    label: 'Both',    color: 'var(--accent)'   },
 ];
 
+function CategoryActionMenu({
+  category,
+  onModify,
+  onDelete,
+  onCancel,
+}: {
+  category: Category;
+  onModify: () => void;
+  onDelete: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative w-full rounded-t-3xl p-5 space-y-3 animate-slide-up pb-8" style={{ background: 'var(--surface)' }}>
+        <h3 className="text-center font-bold mb-2 text-lg" style={{ color: 'var(--text-1)' }}>{category.name}</h3>
+        <button
+          onClick={onModify}
+          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95"
+          style={{ background: 'var(--surface-2)', color: 'var(--text-1)' }}
+        >
+          <i className="fa-solid fa-pen mr-2" /> Modify Category
+        </button>
+        {!category.isDefault && (
+          <button
+            onClick={onDelete}
+            className="w-full py-4 rounded-xl font-bold text-red-500 bg-red-500/10 transition-all active:scale-95"
+          >
+            <i className="fa-solid fa-trash mr-2" /> Delete Category
+          </button>
+        )}
+        <button
+          onClick={onCancel}
+          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95 mt-2"
+          style={{ color: 'var(--text-3)' }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CategoryForm({
   initial,
   onSave,
   onCancel,
-  onDelete,
-  onReorder,
 }: {
   initial?: Category;
   onSave: (c: Omit<Category, 'id' | 'sortOrder'>) => void;
   onCancel: () => void;
-  onDelete?: () => void;
-  onReorder?: (dir: 'up' | 'down') => void;
 }) {
   const [name,       setName]       = useState(initial?.name   ?? '');
   const [type,       setType]       = useState<CategoryType>(initial?.type  ?? 'expense');
@@ -311,49 +351,13 @@ function CategoryForm({
           </div>
         </div>
 
-        {initial ? (
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: false, isActive: true })}
-              disabled={!valid}
-              className="btn-primary"
-            >
-              Save Changes
-            </button>
-            <div className="flex gap-2">
-              <button
-                onClick={() => onReorder?.('up')}
-                className="flex-1 py-3 rounded-xl font-bold transition-all active:scale-95"
-                style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
-              >
-                <i className="fa-solid fa-arrow-left mr-2" /> Move Left
-              </button>
-              <button
-                onClick={() => onReorder?.('down')}
-                className="flex-1 py-3 rounded-xl font-bold transition-all active:scale-95"
-                style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
-              >
-                Move Right <i className="fa-solid fa-arrow-right ml-2" />
-              </button>
-            </div>
-            {!initial.isDefault && (
-              <button
-                onClick={onDelete}
-                className="py-3 rounded-xl font-bold text-red-500 bg-red-500/10 transition-all active:scale-95"
-              >
-                Delete Category
-              </button>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: false, isActive: true })}
-            disabled={!valid}
-            className="btn-primary"
-          >
-            Add Category
-          </button>
-        )}
+        <button
+          onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: false, isActive: true })}
+          disabled={!valid}
+          className="btn-primary"
+        >
+          {initial ? 'Save Changes' : 'Add Category'}
+        </button>
       </div>
     </div>
   );
@@ -363,6 +367,7 @@ export default function Categories() {
   const { categories, addCategory, updateCategory, deleteCategory, reorderCategory, showToast } = useStore();
   const [showForm,    setShowForm]    = useState(false);
   const [editingCat,  setEditingCat]  = useState<Category | null>(null);
+  const [actionMenuCat, setActionMenuCat] = useState<Category | null>(null);
   const [filterType,  setFilterType]  = useState<CategoryType | 'all'>('all');
 
   const filtered = categories
@@ -382,17 +387,20 @@ export default function Categories() {
   };
 
   const handleDelete = () => {
-    if (editingCat && confirm('Are you sure you want to delete this category?')) {
-      deleteCategory(editingCat.id);
+    if (actionMenuCat && confirm('Are you sure you want to delete this category?')) {
+      deleteCategory(actionMenuCat.id);
       showToast('Category deleted');
-      setShowForm(false);
-      setEditingCat(null);
+      setActionMenuCat(null);
     }
   };
 
-  const openEdit = (cat: Category) => {
-    setEditingCat(cat);
-    setShowForm(true);
+  const openActionMenu = (cat: Category) => {
+    setActionMenuCat(cat);
+  };
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    reorderCategory(result.source.index, result.destination.index);
   };
 
   return (
@@ -448,43 +456,68 @@ export default function Categories() {
             onAction={() => setShowForm(true)}
           />
         ) : (
-          <div className="grid grid-cols-4 gap-2">
-            {filtered.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => openEdit(cat)}
-                className="relative flex flex-col items-center gap-1.5 p-2.5 rounded-2xl transition-all active:scale-95"
-                style={{ background: 'var(--surface)' }}
-                title={cat.isDefault ? 'Default category' : 'Tap to edit'}
-              >
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="categories-list">
+              {(provided) => (
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: `${cat.color}18` }}
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="flex flex-col gap-2"
                 >
-                  <i className={`fa-solid ${cat.icon} text-sm`} style={{ color: cat.color }} />
-                </div>
-                <span
-                  className="text-xs font-medium text-center leading-tight"
-                  style={{ color: 'var(--text-2)' }}
-                >
-                  {cat.name}
-                </span>
+                  {filtered.map((cat, index) => (
+                    <Draggable
+                      key={cat.id}
+                      draggableId={cat.id}
+                      index={index}
+                      isDragDisabled={filterType !== 'all'}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`flex items-center gap-3 p-3 rounded-2xl transition-shadow ${
+                            snapshot.isDragging ? 'shadow-lg z-50' : ''
+                          }`}
+                          style={{
+                            background: 'var(--surface)',
+                            ...provided.draggableProps.style,
+                          }}
+                        >
+                          <button
+                            className="flex items-center gap-3 flex-1 text-left"
+                            onClick={() => openActionMenu(cat)}
+                          >
+                            <div
+                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: `${cat.color}18` }}
+                            >
+                              <i className={`fa-solid ${cat.icon} text-sm`} style={{ color: cat.color }} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>
+                                {cat.name}
+                              </p>
+                              <p className="text-xs capitalize" style={{ color: 'var(--text-3)' }}>
+                                {cat.type}
+                              </p>
+                            </div>
+                          </button>
 
-                {/* Always-visible edit badge */}
-                <div
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{
-                    background: cat.isDefault ? 'var(--surface-2)' : `${cat.color}22`,
-                  }}
-                >
-                  <i
-                    className={`fa-solid ${cat.isDefault ? 'fa-lock' : 'fa-pen'} text-[9px]`}
-                    style={{ color: cat.isDefault ? 'var(--text-3)' : cat.color }}
-                  />
+                          <div
+                            {...provided.dragHandleProps}
+                            className={`p-2 shrink-0 ${filterType !== 'all' ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                          >
+                            <i className="fa-solid fa-bars text-lg" style={{ color: 'var(--text-3)' }} />
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
                 </div>
-              </button>
-            ))}
-          </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         )}
       </div>
 
@@ -493,10 +526,19 @@ export default function Categories() {
           initial={editingCat ?? undefined}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditingCat(null); }}
-          onDelete={handleDelete}
-          onReorder={(dir) => {
-            if (editingCat) reorderCategory(editingCat.id, dir);
+        />
+      )}
+
+      {actionMenuCat && (
+        <CategoryActionMenu
+          category={actionMenuCat}
+          onModify={() => {
+            setEditingCat(actionMenuCat);
+            setActionMenuCat(null);
+            setShowForm(true);
           }}
+          onDelete={handleDelete}
+          onCancel={() => setActionMenuCat(null)}
         />
       )}
     </div>
