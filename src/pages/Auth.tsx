@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 import { exportBackupJSON } from '../utils/backup';
+import Toast from '../components/ui/Toast';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   
   const showToast = useStore((s) => s.showToast);
+  const toasts = useStore((s) => s.toasts);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +149,13 @@ export default function Auth() {
       >
         Export Local Data Backup (JSON)
       </button>
+
+      {/* Toast notifications */}
+      <div className="fixed bottom-20 inset-x-0 z-50 flex flex-col items-center gap-2 px-4 pointer-events-none">
+        {toasts.map((t) => (
+          <Toast key={t.id} toast={t} />
+        ))}
+      </div>
     </div>
   );
 }
