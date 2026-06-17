@@ -6,15 +6,15 @@ import EmptyState from '../components/ui/EmptyState';
 import type { TransactionType } from '../types';
 
 const TYPE_OPTIONS: { id: TransactionType | 'all'; label: string }[] = [
-  { id: 'all',      label: 'All' },
-  { id: 'income',   label: 'Income' },
-  { id: 'expense',  label: 'Expense' },
+  { id: 'all',      label: 'All'      },
+  { id: 'income',   label: 'Income'   },
+  { id: 'expense',  label: 'Expense'  },
   { id: 'transfer', label: 'Transfer' },
 ];
 
 function dateHeader(dateStr: string): string {
   const d = parseISO(dateStr);
-  if (isToday(d)) return 'Today';
+  if (isToday(d))     return 'Today';
   if (isYesterday(d)) return 'Yesterday';
   return format(d, 'EEEE, MMMM d, yyyy');
 }
@@ -24,7 +24,7 @@ export default function Transactions() {
   const openAddSheet = useStore((s) => s.openAddSheet);
 
   const [typeFilter, setTypeFilter] = useState<TransactionType | 'all'>('all');
-  const [search, setSearch] = useState('');
+  const [search, setSearch]         = useState('');
 
   const filtered = useMemo(() => {
     return [...transactions]
@@ -39,7 +39,6 @@ export default function Transactions() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [transactions, typeFilter, search]);
 
-  // Group by date
   const grouped = useMemo(() => {
     const groups = new Map<string, typeof filtered>();
     for (const t of filtered) {
@@ -51,16 +50,25 @@ export default function Transactions() {
   }, [filtered]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+      <div
+        className="px-4 pt-6 pb-4 sticky top-0 z-10"
+        style={{ background: 'var(--bg)', boxShadow: '0 1px 0 var(--border)' }}
+      >
+        <h1
+          className="font-bold mb-4"
+          style={{ color: 'var(--text-1)', fontSize: 22, letterSpacing: '-0.01em' }}
+        >
           Transactions
         </h1>
 
         {/* Search */}
         <div className="relative mb-3">
-          <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+          <i
+            className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+            style={{ color: 'var(--text-3)' }}
+          />
           <input
             id="search-transactions"
             type="search"
@@ -71,18 +79,18 @@ export default function Transactions() {
           />
         </div>
 
-        {/* Type Filter */}
+        {/* Type filter chips */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {TYPE_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               id={`filter-${opt.id}`}
               onClick={() => setTypeFilter(opt.id)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 ${
-                typeFilter === opt.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
+              className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150"
+              style={{
+                background: typeFilter === opt.id ? 'var(--text-1)' : 'var(--surface-2)',
+                color:      typeFilter === opt.id ? 'var(--bg)'     : 'var(--text-2)',
+              }}
             >
               {opt.label}
             </button>
@@ -90,33 +98,39 @@ export default function Transactions() {
         </div>
       </div>
 
-      {/* Transaction List */}
+      {/* List */}
       <div className="px-4 py-4 space-y-4">
         {grouped.length === 0 ? (
           <EmptyState
             icon="fa-receipt"
-            title={search ? 'No Results' : 'No Transactions Yet'}
+            title={search ? 'No results found' : 'No transactions yet'}
             description={
               search
-                ? `No transactions matching "${search}"`
-                : 'Start by adding your first income or expense entry.'
+                ? `No transactions matching "${search}". Try a different keyword.`
+                : 'Start logging your income and expenses. Use categories like Food, Transport, and Bills to build a clear picture of your spending habits.'
             }
-            actionLabel={!search ? 'Add Entry' : undefined}
+            actionLabel={!search ? 'Add First Entry' : undefined}
             onAction={!search ? () => openAddSheet() : undefined}
           />
         ) : (
           grouped.map(([dateKey, txns]) => (
             <div key={dateKey}>
-              {/* Date Header */}
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <p
+                  style={{
+                    color: 'var(--text-3)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                  }}
+                >
                   {dateHeader(txns[0].date)}
                 </p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p style={{ color: 'var(--text-3)', fontSize: 12 }}>
                   {txns.length} item{txns.length !== 1 ? 's' : ''}
                 </p>
               </div>
-
               <div className="card p-0 overflow-hidden">
                 {txns.map((txn) => (
                   <TransactionRow key={txn.id} transaction={txn} />

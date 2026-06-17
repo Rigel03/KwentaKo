@@ -34,10 +34,20 @@ interface ChartTooltipProps { active?: boolean; payload?: { value: number; name:
 function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-lg text-xs">
-      <p className="font-bold text-slate-700 dark:text-slate-200 mb-1">{label}</p>
+    <div
+      className="rounded-xl p-3 shadow-lg text-xs"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+    >
+      <p className="font-bold mb-1" style={{ color: 'var(--text-1)' }}>{label}</p>
       {payload.map((p) => (
-        <p key={p.name} className={p.name === 'income' ? 'text-green-600' : p.name === 'expense' ? 'text-red-500' : 'text-blue-600'}>
+        <p
+          key={p.name}
+          style={{
+            color: p.name === 'income' ? 'var(--income)'
+                 : p.name === 'expense' ? 'var(--expense)'
+                 : 'var(--accent)',
+          }}
+        >
           {p.name}: ₱{p.value.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
         </p>
       ))}
@@ -141,10 +151,18 @@ export default function Analytics() {
   const momChange     = lastMonthExp > 0 ? ((thisMonthExp - lastMonthExp) / lastMonthExp) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-8">
+    <div className="min-h-screen pb-8" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Analytics</h1>
+      <div
+        className="px-4 pt-6 pb-4 sticky top-0 z-10"
+        style={{ background: 'var(--bg)', boxShadow: '0 1px 0 var(--border)' }}
+      >
+        <h1
+          className="font-bold mb-3"
+          style={{ color: 'var(--text-1)', fontSize: 22, letterSpacing: '-0.01em' }}
+        >
+          Analytics
+        </h1>
 
         {/* Period Selector */}
         <div className="flex gap-2">
@@ -153,11 +171,11 @@ export default function Analytics() {
               key={opt.id}
               id={`analytics-period-${opt.id}`}
               onClick={() => setPeriod(opt.id)}
-              className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                period === opt.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
+              className="flex-1 py-2 rounded-xl text-xs font-semibold transition-colors"
+              style={{
+                background: period === opt.id ? 'var(--text-1)' : 'var(--surface-2)',
+                color:      period === opt.id ? 'var(--bg)'     : 'var(--text-2)',
+              }}
             >
               {opt.label}
             </button>
@@ -183,17 +201,18 @@ export default function Analytics() {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                vs Last Month (Spending)
-              </p>
-              <p className="text-lg font-bold text-slate-900 dark:text-white">
+              <p className="section-label mb-1">vs Last Month (Spending)</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>
                 {formatPHP(thisMonthExp)}
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                 Last month: {formatPHP(lastMonthExp)}
               </p>
             </div>
-            <div className={`flex flex-col items-end ${momChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
+            <div
+              className="flex flex-col items-end"
+              style={{ color: momChange > 0 ? 'var(--expense)' : 'var(--income)' }}
+            >
               <i className={`fa-solid ${momChange > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'} text-2xl mb-1`} />
               <span className="text-sm font-bold">
                 {momChange > 0 ? '+' : ''}{momChange.toFixed(1)}%
@@ -206,22 +225,28 @@ export default function Analytics() {
         <div className="card">
           <p className="section-label mb-3">Income vs Expenses</p>
           {barData.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-6">No data for this period</p>
+            <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>No data for this period</p>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={barData} barGap={2}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
                 <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="income"  fill="#16A34A" radius={[4,4,0,0]} name="income" />
-                <Bar dataKey="expense" fill="#EF4444" radius={[4,4,0,0]} name="expense" />
+                <Bar dataKey="income"  fill="var(--income)"  radius={[4,4,0,0]} name="income" />
+                <Bar dataKey="expense" fill="var(--expense)" radius={[4,4,0,0]} name="expense" />
               </BarChart>
             </ResponsiveContainer>
           )}
           <div className="flex gap-4 mt-2 justify-center">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-green-600" /><span className="text-xs text-slate-500">Income</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-red-500" /><span className="text-xs text-slate-500">Expense</span></div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--income)' }} />
+              <span className="text-xs" style={{ color: 'var(--text-3)' }}>Income</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--expense)' }} />
+              <span className="text-xs" style={{ color: 'var(--text-3)' }}>Expense</span>
+            </div>
           </div>
         </div>
 
@@ -229,7 +254,7 @@ export default function Analytics() {
         <div className="card">
           <p className="section-label mb-3">Spending by Category</p>
           {catData.length === 0 ? (
-            <EmptyState icon="fa-chart-pie" title="No Expense Data" description="Add some expenses to see your spending breakdown." />
+            <EmptyState icon="fa-chart-pie" title="No expense data yet" description="Add some expense transactions to see your spending breakdown by category here." />
           ) : (
             <>
               <ResponsiveContainer width="100%" height={180}>
@@ -269,13 +294,13 @@ export default function Analytics() {
           <p className="section-label mb-3">30-Day Net Worth Trend</p>
           <ResponsiveContainer width="100%" height={150}>
             <LineChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#94A3B8' }} axisLine={false} tickLine={false}
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 9, fill: 'var(--text-3)' }} axisLine={false} tickLine={false}
                 interval={Math.floor(trendData.length / 5)} />
-              <YAxis tick={{ fontSize: 9, fill: '#94A3B8' }} axisLine={false} tickLine={false}
+              <YAxis tick={{ fontSize: 9, fill: 'var(--text-3)' }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
               <Tooltip formatter={(v: unknown) => [`₱${Number(v).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, 'Balance'] as [string, string]} />
-              <Line type="monotone" dataKey="balance" stroke="#2563EB" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="balance" stroke="var(--accent)" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

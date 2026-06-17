@@ -7,8 +7,8 @@ import type { ThemeMode } from '../types';
 
 const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string }[] = [
   { id: 'system', label: 'System', icon: 'fa-circle-half-stroke' },
-  { id: 'light',  label: 'Light',  icon: 'fa-sun' },
-  { id: 'dark',   label: 'Dark',   icon: 'fa-moon' },
+  { id: 'light',  label: 'Light',  icon: 'fa-sun'               },
+  { id: 'dark',   label: 'Dark',   icon: 'fa-moon'              },
 ];
 
 function SettingsRow({
@@ -21,31 +21,48 @@ function SettingsRow({
     <button
       onClick={onClick}
       disabled={!onClick && !children}
-      className={`w-full flex items-center gap-3 px-4 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${danger ? 'text-red-500' : ''}`}
+      className="w-full flex items-center gap-3 px-4 py-4 transition-colors"
+      style={{ color: danger ? 'var(--expense)' : 'inherit' }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${danger ? 'bg-red-100 dark:bg-red-900/30' : 'bg-slate-100 dark:bg-slate-800'}`}>
-        <i className={`fa-solid ${icon} text-sm ${danger ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`} />
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{
+          background: danger ? 'rgba(220,38,38,0.08)' : 'var(--surface-2)',
+        }}
+      >
+        <i
+          className={`fa-solid ${icon} text-sm`}
+          style={{ color: danger ? 'var(--expense)' : 'var(--text-2)' }}
+        />
       </div>
       <div className="flex-1 text-left">
-        <p className={`text-sm font-semibold ${danger ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>{label}</p>
-        {sublabel && <p className="text-xs text-slate-400 dark:text-slate-500">{sublabel}</p>}
+        <p className="text-sm font-semibold" style={{ color: danger ? 'var(--expense)' : 'var(--text-1)' }}>
+          {label}
+        </p>
+        {sublabel && (
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{sublabel}</p>
+        )}
       </div>
-      {children ?? (onClick && <i className="fa-solid fa-chevron-right text-xs text-slate-400" />)}
+      {children ?? (onClick && (
+        <i className="fa-solid fa-chevron-right text-xs" style={{ color: 'var(--text-3)' }} />
+      ))}
     </button>
   );
 }
 
 interface SettingsProps {
-  onNavigateToAccounts: () => void;
+  onNavigateToAccounts:   () => void;
   onNavigateToCategories: () => void;
 }
 
 export default function Settings({ onNavigateToAccounts, onNavigateToCategories }: SettingsProps) {
-  const { settings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
+  const { settings, updateSettings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleExportCSV = () => {
-    const csv = exportTransactionsCSV(transactions, accounts, categories);
+    const csv      = exportTransactionsCSV(transactions, accounts, categories);
     const filename = `kwentako_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
     downloadCSV(csv, filename);
     showToast('Export downloaded ✓');
@@ -58,54 +75,54 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h1>
+      <div
+        className="px-4 pt-6 pb-4"
+        style={{ background: 'var(--bg)', boxShadow: '0 1px 0 var(--border)' }}
+      >
+        <h1
+          className="font-bold"
+          style={{ color: 'var(--text-1)', fontSize: 22, letterSpacing: '-0.01em' }}
+        >
+          Settings
+        </h1>
       </div>
 
       <div className="py-4 space-y-4">
 
         {/* Appearance */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            Appearance
-          </p>
-
-          {/* Theme */}
-          <div className="px-4 py-3">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">App Theme</p>
-            <div className="flex gap-2">
-              {THEME_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  id={`theme-${opt.id}`}
-                  onClick={() => setTheme(opt.id)}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-all ${
-                    settings.theme === opt.id
-                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
-                  }`}
-                >
-                  <i className={`fa-solid ${opt.icon} text-base`} />
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+        <div className="card mx-4">
+          <p className="section-label mb-3">Appearance</p>
+          <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-1)' }}>App Theme</p>
+          <div className="flex gap-2">
+            {THEME_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                id={`theme-${opt.id}`}
+                onClick={() => setTheme(opt.id)}
+                className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-semibold transition-all"
+                style={{
+                  background: settings.theme === opt.id ? 'var(--accent)' : 'var(--surface-2)',
+                  color:      settings.theme === opt.id ? '#fff'          : 'var(--text-2)',
+                }}
+              >
+                <i className={`fa-solid ${opt.icon} text-sm`} />
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Data Management */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            Manage
-          </p>
+        {/* Manage */}
+        <div className="rounded-2xl mx-4 overflow-hidden" style={{ background: 'var(--surface)' }}>
+          <p className="px-4 pt-4 pb-1 section-label">Manage</p>
           <SettingsRow
             icon="fa-wallet" label="Accounts"
             sublabel={`${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
             onClick={onNavigateToAccounts}
           />
-          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
+          <div style={{ height: 1, margin: '0 16px', background: 'var(--divider)' }} />
           <SettingsRow
             icon="fa-tag" label="Categories"
             sublabel={`${categories.length} categories`}
@@ -114,16 +131,14 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
         </div>
 
         {/* Data */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            Data
-          </p>
+        <div className="rounded-2xl mx-4 overflow-hidden" style={{ background: 'var(--surface)' }}>
+          <p className="px-4 pt-4 pb-1 section-label">Data</p>
           <SettingsRow
             icon="fa-file-csv" label="Export CSV"
             sublabel={`${transactions.length} transactions`}
             onClick={handleExportCSV}
           />
-          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
+          <div style={{ height: 1, margin: '0 16px', background: 'var(--divider)' }} />
           <SettingsRow
             icon="fa-trash-can" label="Clear All Data"
             sublabel="Cannot be undone"
@@ -132,17 +147,33 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
           />
         </div>
 
-        {/* App Info */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700 px-4 py-4">
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">About</p>
+        {/* Profile & About */}
+        <div className="card mx-4">
+          <p className="section-label mb-3">Profile</p>
+          <div className="mb-5">
+            <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text-1)' }}>Your Name</p>
+            <input
+              value={settings.userName ?? ''}
+              onChange={(e) => updateSettings({ userName: e.target.value })}
+              placeholder="How should we call you?"
+              className="input-field"
+            />
+          </div>
+
+          <div style={{ height: 1, margin: '20px 0', background: 'var(--divider)' }} />
+
+          <p className="section-label mb-3">About</p>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ background: 'var(--accent)' }}
+            >
               <i className="fa-solid fa-peso-sign text-white text-lg" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">KwentaKo</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">Personal Money Tracker v1.0</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">Offline-first • PHP • localStorage</p>
+              <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>KwentaKo</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Personal Money Tracker v1.0</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Offline-first · PHP</p>
             </div>
           </div>
         </div>

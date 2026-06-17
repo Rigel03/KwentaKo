@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { format, parseISO, subDays, addDays, isAfter, startOfDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { evaluateExpression } from '../../utils/currency';
 import NumPad from './NumPad';
+import DateTimePicker from './DateTimePicker';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import type { Transaction, TransactionType } from '../../types';
 
@@ -45,6 +46,7 @@ export default function AddEntrySheet() {
   );
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTransferDeleteConfirm, setShowTransferDeleteConfirm] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const noteRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -83,11 +85,8 @@ export default function AddEntrySheet() {
     categoryId !== '' &&
     (type !== 'transfer' || (toAccountId !== '' && toAccountId !== accountId));
 
-  // ── Date navigation
-  const today = startOfDay(new Date());
-  const canGoForward = !isAfter(startOfDay(addDays(date, 1)), today);
-  const goBack    = () => setDate((d) => subDays(d, 1));
-  const goForward = () => { if (canGoForward) setDate((d) => addDays(d, 1)); };
+  // ── Date navigation (removed — picker handles this now)
+  const today = new Date();
 
   // ── Save
   const handleSave = () => {
@@ -159,13 +158,13 @@ export default function AddEntrySheet() {
       <div ref={panelRef} className="sheet-panel animate-slide-up">
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--surface-3)' }} />
         </div>
 
         <div className="px-4 pb-8 space-y-5">
 
           {/* ── Type Selector ────────────────────────────────────────────── */}
-          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+          <div className="flex gap-2 rounded-xl p-1" style={{ background: 'var(--surface-2)' }}>
             {(Object.keys(TYPE_CONFIG) as TransactionType[]).map((t) => (
               <button
                 key={t}
@@ -301,34 +300,28 @@ export default function AddEntrySheet() {
             />
           </div>
 
-          {/* ── Date Selector ────────────────────────────────────────────── */}
+          {/* ── Date & Time Selector ─────────────────────────────────── */}
           <div>
-            <p className="section-label">Date</p>
-            <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-3">
-              <button
-                onClick={goBack}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                aria-label="Previous day"
-              >
-                <i className="fa-solid fa-chevron-left text-slate-500 text-sm" />
-              </button>
-
+            <p className="section-label">Date &amp; Time</p>
+            <button
+              id="date-time-btn"
+              onClick={() => setShowPicker(true)}
+              className="w-full flex items-center justify-between rounded-xl px-4 py-3 transition-colors"
+              style={{ background: 'var(--surface-2)' }}
+            >
               <div className="flex items-center gap-2">
-                <i className="fa-solid fa-calendar text-blue-500 text-sm" />
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  {format(date, 'EEE, MMM d, yyyy')}
+                <i className="fa-solid fa-calendar-days text-sm" style={{ color: 'var(--accent)' }} />
+                <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
+                  {format(date, 'EEE, MMM d yyyy')}
                 </span>
               </div>
-
-              <button
-                onClick={goForward}
-                disabled={!canGoForward}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-30"
-                aria-label="Next day"
-              >
-                <i className="fa-solid fa-chevron-right text-slate-500 text-sm" />
-              </button>
-            </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
+                  {format(date, 'h:mm aa')}
+                </span>
+                <i className="fa-solid fa-chevron-right text-xs" style={{ color: 'var(--text-3)' }} />
+              </div>
+            </button>
           </div>
 
           {/* ── Save Button ──────────────────────────────────────────────── */}
@@ -375,6 +368,16 @@ export default function AddEntrySheet() {
         onConfirm={confirmDeletePair}
         onCancel={() => setShowTransferDeleteConfirm(false)}
       />
+
+      {/* ── Date/Time Picker ────────────────────────────────────────────── */}
+      {showPicker && (
+        <DateTimePicker
+          value={date}
+          maxDate={today}
+          onChange={setDate}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
     </>
   );
 }

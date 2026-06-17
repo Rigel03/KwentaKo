@@ -1,5 +1,5 @@
 interface EmptyStateProps {
-  icon: string;         // FA class
+  icon: string;
   title: string;
   description: string;
   actionLabel?: string;
@@ -14,23 +14,33 @@ export default function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-8 text-center animate-fade-in">
-      {/* Illustration circle */}
-      <div className="w-24 h-24 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-5">
-        <i className={`fa-solid ${icon} text-3xl text-blue-400 dark:text-blue-500`} />
+    <div className="flex flex-col items-center justify-center py-14 px-8 text-center animate-fade-in">
+      {/* Icon circle */}
+      <div
+        className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
+        style={{ background: 'var(--surface-2)' }}
+      >
+        <i className={`fa-solid ${icon} text-2xl`} style={{ color: 'var(--text-3)' }} />
       </div>
 
-      <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2">
+      <h3
+        className="font-semibold mb-2"
+        style={{ color: 'var(--text-1)', fontSize: 16 }}
+      >
         {title}
       </h3>
-      <p className="text-sm text-slate-400 dark:text-slate-500 leading-relaxed max-w-xs">
+      <p
+        className="text-sm leading-relaxed max-w-xs"
+        style={{ color: 'var(--text-3)' }}
+      >
         {description}
       </p>
 
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors duration-150"
+          className="mt-6 px-6 py-3 text-sm font-semibold rounded-xl transition-opacity active:opacity-80"
+          style={{ background: 'var(--accent)', color: '#fff' }}
         >
           {actionLabel}
         </button>

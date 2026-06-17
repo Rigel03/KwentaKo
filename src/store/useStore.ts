@@ -14,11 +14,7 @@ import type {
   ToastMessage,
   ThemeMode,
 } from '../types';
-import {
-  DEFAULT_ACCOUNTS,
-  DEFAULT_CATEGORIES,
-  SAMPLE_TRANSACTIONS,
-} from '../utils/seedData';
+import { DEFAULT_ACCOUNTS, DEFAULT_CATEGORIES } from '../utils/seedData';
 
 // ─── Store Shape ──────────────────────────────────────────────────────────────
 
@@ -70,14 +66,14 @@ export const useStore = create<KwentaKoStore>()(
     (set) => ({
       // ── Initial Data
       accounts: DEFAULT_ACCOUNTS,
-      transactions: SAMPLE_TRANSACTIONS,
+      transactions: [],
       categories: DEFAULT_CATEGORIES,
       settings: {
         theme: 'system',
         currency: 'PHP',
         defaultAccountId: 'acc-cash',
         analyticsDefaultPeriod: 'month',
-        hasSeededData: true,
+        hasSeededData: false,
       },
 
       // ── UI State (reset on each load)

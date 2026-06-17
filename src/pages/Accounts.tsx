@@ -9,13 +9,13 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { Account, AccountType } from '../types';
 
 const ACCOUNT_TYPES: { id: AccountType; label: string; icon: string }[] = [
-  { id: 'cash',         label: 'Cash',         icon: 'fa-money-bill-wave' },
-  { id: 'e_wallet',     label: 'E-Wallet',     icon: 'fa-mobile-screen-button' },
-  { id: 'bank',         label: 'Bank',         icon: 'fa-building-columns' },
-  { id: 'digital_bank', label: 'Digital Bank', icon: 'fa-building-columns' },
-  { id: 'savings',      label: 'Savings',      icon: 'fa-piggy-bank' },
-  { id: 'investment',   label: 'Investment',   icon: 'fa-chart-line' },
-  { id: 'other',        label: 'Other',        icon: 'fa-circle-question' },
+  { id: 'cash',         label: 'Cash',         icon: 'fa-money-bill-wave'       },
+  { id: 'e_wallet',     label: 'E-Wallet',     icon: 'fa-mobile-screen-button'  },
+  { id: 'bank',         label: 'Bank',         icon: 'fa-building-columns'      },
+  { id: 'digital_bank', label: 'Digital Bank', icon: 'fa-building-columns'      },
+  { id: 'savings',      label: 'Savings',      icon: 'fa-piggy-bank'            },
+  { id: 'investment',   label: 'Investment',   icon: 'fa-chart-line'            },
+  { id: 'other',        label: 'Other',        icon: 'fa-circle-question'       },
 ];
 
 const PRESET_COLORS = [
@@ -33,19 +33,21 @@ function AccountForm({
   onSave: (a: Omit<Account, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
 }) {
-  const [name, setName] = useState(initial?.name ?? '');
-  const [type, setType] = useState<AccountType>(initial?.type ?? 'cash');
+  const [name,  setName]  = useState(initial?.name  ?? '');
+  const [type,  setType]  = useState<AccountType>(initial?.type  ?? 'cash');
   const [color, setColor] = useState(initial?.color ?? '#2563EB');
-  const icon = ACCOUNT_TYPES.find((t) => t.id === type)?.icon ?? 'fa-circle-question';
-
+  const icon  = ACCOUNT_TYPES.find((t) => t.id === type)?.icon ?? 'fa-circle-question';
   const valid = name.trim().length > 0;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full bg-white dark:bg-slate-900 rounded-t-3xl p-6 space-y-4 animate-slide-up max-h-[80vh] overflow-y-auto">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div
+        className="relative w-full rounded-t-3xl p-6 space-y-4 animate-slide-up max-h-[80vh] overflow-y-auto"
+        style={{ background: 'var(--surface)' }}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+          <h3 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>
             {initial?.id ? 'Edit Account' : 'New Account'}
           </h3>
           <button onClick={onCancel} className="btn-ghost p-2">
@@ -73,11 +75,11 @@ function AccountForm({
               <button
                 key={t.id}
                 onClick={() => setType(t.id)}
-                className={`py-2.5 px-2 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                  type === t.id
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                }`}
+                className="py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1.5 transition-all"
+                style={{
+                  background: type === t.id ? 'var(--accent)' : 'var(--surface-2)',
+                  color:      type === t.id ? '#fff'          : 'var(--text-2)',
+                }}
               >
                 <i className={`fa-solid ${t.icon} text-sm`} />
                 {t.label}
@@ -94,8 +96,11 @@ function AccountForm({
               <button
                 key={c}
                 onClick={() => setColor(c)}
-                className={`w-9 h-9 rounded-xl transition-transform ${color === c ? 'ring-2 ring-offset-2 ring-blue-600 scale-110' : ''}`}
-                style={{ backgroundColor: c }}
+                className={`w-9 h-9 rounded-xl transition-transform ${color === c ? 'scale-110' : ''}`}
+                style={{
+                  backgroundColor: c,
+                  boxShadow: color === c ? `0 0 0 2px var(--surface), 0 0 0 4px ${c}` : 'none',
+                }}
                 aria-label={`Color ${c}`}
               />
             ))}
@@ -103,13 +108,23 @@ function AccountForm({
         </div>
 
         {/* Preview */}
-        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}25` }}>
+        <div
+          className="flex items-center gap-3 p-3 rounded-xl"
+          style={{ background: 'var(--surface-2)' }}
+        >
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${color}20` }}
+          >
             <i className={`fa-solid ${icon} text-base`} style={{ color }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">{name || 'Account Name'}</p>
-            <p className="text-xs text-slate-400">{ACCOUNT_TYPES.find((t) => t.id === type)?.label}</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
+              {name || 'Account Name'}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+              {ACCOUNT_TYPES.find((t) => t.id === type)?.label}
+            </p>
           </div>
         </div>
 
@@ -127,10 +142,10 @@ function AccountForm({
 
 export default function Accounts() {
   const { accounts, transactions, addAccount, updateAccount, deleteAccount, showToast } = useStore();
-  const [showForm, setShowForm] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
+  const [showForm,         setShowForm]         = useState(false);
+  const [editingAccount,   setEditingAccount]   = useState<Account | null>(null);
+  const [selectedAccountId,setSelectedAccountId]= useState<string | null>(null);
+  const [deleteTarget,     setDeleteTarget]     = useState<Account | null>(null);
 
   const netWorth = getNetWorth(accounts.filter((a) => a.isActive), transactions);
 
@@ -157,28 +172,38 @@ export default function Accounts() {
   };
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
-  const accountTxns = selectedAccount
+  const accountTxns     = selectedAccount
     ? [...transactions]
         .filter((t) => t.accountId === selectedAccount.id || t.toAccountId === selectedAccount.id)
         .sort((a, b) => b.date.localeCompare(a.date))
     : [];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Accounts</h1>
+      <div
+        className="px-4 pt-6 pb-4"
+        style={{ background: 'var(--bg)', boxShadow: '0 1px 0 var(--border)' }}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <h1
+            className="font-bold"
+            style={{ color: 'var(--text-1)', fontSize: 22, letterSpacing: '-0.01em' }}
+          >
+            Accounts
+          </h1>
           <button
             id="add-account-btn"
             onClick={() => { setEditingAccount(null); setShowForm(true); }}
-            className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors"
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+            style={{ background: 'var(--accent)', color: '#fff' }}
           >
             <i className="fa-solid fa-plus text-sm" />
           </button>
         </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Net Worth: <span className="font-bold text-slate-800 dark:text-slate-100">{formatPHP(netWorth)}</span>
+        <p style={{ color: 'var(--text-3)', fontSize: 13 }}>
+          Net worth:{'  '}
+          <span style={{ color: 'var(--text-1)', fontWeight: 700 }}>{formatPHP(netWorth)}</span>
         </p>
       </div>
 
@@ -186,9 +211,9 @@ export default function Accounts() {
         {accounts.length === 0 ? (
           <EmptyState
             icon="fa-wallet"
-            title="No Accounts"
-            description="Add your first account to start tracking."
-            actionLabel="Add Account"
+            title="No accounts yet"
+            description="Add your wallets and bank accounts here — Cash, GCash, Maya, BPI, and more. Your balances will be calculated automatically as you log transactions."
+            actionLabel="Add First Account"
             onAction={() => setShowForm(true)}
           />
         ) : (
@@ -196,21 +221,23 @@ export default function Accounts() {
             {accounts.map((acc) => (
               <div key={acc.id} className="relative group">
                 <AccountCard account={acc} onClick={() => setSelectedAccountId(acc.id)} />
-                {/* Edit/Delete overlay */}
+                {/* Edit/Delete */}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => { e.stopPropagation(); setEditingAccount(acc); setShowForm(true); }}
-                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 shadow flex items-center justify-center"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm"
+                    style={{ background: 'var(--surface)' }}
                     aria-label="Edit account"
                   >
-                    <i className="fa-solid fa-pen text-xs text-slate-500" />
+                    <i className="fa-solid fa-pen text-xs" style={{ color: 'var(--text-2)' }} />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(acc); }}
-                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 shadow flex items-center justify-center"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm"
+                    style={{ background: 'var(--surface)' }}
                     aria-label="Delete account"
                   >
-                    <i className="fa-solid fa-trash text-xs text-red-400" />
+                    <i className="fa-solid fa-trash text-xs" style={{ color: 'var(--expense)' }} />
                   </button>
                 </div>
               </div>
@@ -223,17 +250,23 @@ export default function Accounts() {
           <div className="card animate-slide-down">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedAccount.name}</p>
-                <p className="text-xs text-slate-400">{accountTxns.length} transactions</p>
+                <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
+                  {selectedAccount.name}
+                </p>
+                <p style={{ color: 'var(--text-3)', fontSize: 12 }}>
+                  {accountTxns.length} transactions
+                </p>
               </div>
               <button onClick={() => setSelectedAccountId(null)} className="btn-ghost p-2">
                 <i className="fa-solid fa-xmark" />
               </button>
             </div>
             {accountTxns.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-4">No transactions for this account.</p>
+              <p className="text-sm text-center py-4" style={{ color: 'var(--text-3)' }}>
+                No transactions for this account.
+              </p>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-700">
+              <div style={{ borderTop: '1px solid var(--divider)' }}>
                 {accountTxns.slice(0, 20).map((t) => (
                   <TransactionRow key={t.id} transaction={t} showAccount={false} />
                 ))}
@@ -243,7 +276,7 @@ export default function Accounts() {
         )}
       </div>
 
-      {/* Account Form Modal */}
+      {/* Account Form */}
       {showForm && (
         <AccountForm
           initial={editingAccount ?? undefined}
@@ -256,7 +289,7 @@ export default function Accounts() {
       <ConfirmDialog
         isOpen={!!deleteTarget}
         title="Account Has Transactions"
-        message={`"${deleteTarget?.name}" has existing transactions. Deleting it will remove all associated transactions. This cannot be undone.`}
+        message={`"${deleteTarget?.name}" has existing transactions. Deleting it will also remove all associated transactions. This cannot be undone.`}
         confirmLabel="Delete Anyway"
         isDangerous
         onConfirm={() => {

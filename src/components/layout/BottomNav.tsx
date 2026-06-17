@@ -9,33 +9,31 @@ interface BottomNavProps {
 }
 
 const NAV_ITEMS = [
-  { id: 'dashboard' as Page,     icon: 'fa-house',     label: 'Home' },
-  { id: 'transactions' as Page,  icon: 'fa-list',      label: 'History' },
-  { id: 'accounts' as Page,      icon: 'fa-wallet',    label: 'Accounts' },
-  { id: 'analytics' as Page,     icon: 'fa-chart-pie', label: 'Analytics' },
-  { id: 'settings' as Page,      icon: 'fa-gear',      label: 'Settings' },
+  { id: 'dashboard'    as Page, icon: 'fa-house',     label: 'Home'      },
+  { id: 'transactions' as Page, icon: 'fa-list',      label: 'History'   },
+  { id: 'accounts'     as Page, icon: 'fa-wallet',    label: 'Accounts'  },
+  { id: 'analytics'    as Page, icon: 'fa-chart-pie', label: 'Analytics' },
+  { id: 'settings'     as Page, icon: 'fa-gear',      label: 'Settings'  },
 ];
 
 export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   const openAddSheet = useStore((s) => s.openAddSheet);
 
   return (
-    <nav className="bottom-nav bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+    <nav className="bottom-nav" style={{ position: 'fixed' }}>
       {NAV_ITEMS.map((item, idx) => {
-        // Center slot — FAB
+        // Centre slot — FAB
         if (idx === 2) {
           return (
             <React.Fragment key="fab-slot">
-              {/* Hidden middle item placeholder */}
               <div className="w-16" />
-              {/* Floating FAB — overlays the center */}
               <button
                 id="fab-add-entry"
                 aria-label="Add new entry"
                 onClick={() => openAddSheet()}
-                className="fab absolute left-1/2 -translate-x-1/2 -translate-y-5 shadow-xl shadow-blue-600/40"
+                className="fab absolute left-1/2 -translate-x-1/2 -translate-y-5"
               >
-                <i className="fa-solid fa-plus text-xl" />
+                <i className="fa-solid fa-plus text-lg" />
               </button>
             </React.Fragment>
           );
@@ -48,20 +46,14 @@ export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
             id={`nav-${item.id}`}
             aria-label={item.label}
             onClick={() => onNavigate(item.id)}
-            className={`nav-item ${
-              isActive
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-slate-400 dark:text-slate-500'
-            }`}
+            className="nav-item"
+            style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)' }}
           >
             <i
-              className={`fa-solid ${item.icon} text-lg transition-transform duration-150 ${
-                isActive ? 'scale-110' : ''
-              }`}
+              className={`fa-solid ${item.icon} transition-transform duration-150`}
+              style={{ fontSize: 18, transform: isActive ? 'scale(1.1)' : 'scale(1)' }}
             />
-            <span className={`transition-all duration-150 ${isActive ? 'font-semibold' : ''}`}>
-              {item.label}
-            </span>
+            <span style={{ fontWeight: isActive ? 600 : 500 }}>{item.label}</span>
           </button>
         );
       })}

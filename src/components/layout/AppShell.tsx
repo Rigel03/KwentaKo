@@ -8,11 +8,11 @@ interface AppShellProps {
 }
 
 export default function AppShell({ children }: AppShellProps) {
-  const toasts = useStore((s) => s.toasts);
+  const toasts        = useStore((s) => s.toasts);
   const isAddSheetOpen = useStore((s) => s.isAddSheetOpen);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-200">
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text-1)' }}>
       {/* Main scrollable content */}
       <div className="app-container">
         {children}
