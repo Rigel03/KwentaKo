@@ -207,8 +207,8 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
             <div className="card">
               <EmptyState
                 icon="fa-receipt"
-                title="No transactions yet"
-                description="Log your first income or expense. Tip: track daily spending like food, transport, and bills to see where your money goes."
+                title={`Hello ${settings.userName || ''}!`}
+                description="Add your first entry now to start tracking."
                 actionLabel="Log First Entry"
                 onAction={() => openAddSheet()}
               />

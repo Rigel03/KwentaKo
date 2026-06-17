@@ -20,15 +20,27 @@ export default function App() {
 
   // ── Auth Initialization
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const handleSession = (session: any) => {
       setUserId(session?.user?.id ?? null);
-      if (session?.user?.id) useStore.getState().initSync();
+      if (session?.user?.id) {
+        useStore.getState().initSync();
+        
+        // Auto-fill Google Name
+        const googleName = session.user.user_metadata?.full_name;
+        const currentSettings = useStore.getState().settings;
+        if (googleName && !currentSettings.userName) {
+          useStore.getState().updateSettings({ userName: googleName });
+        }
+      }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
       setAuthInitialized(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
-      if (session?.user?.id) useStore.getState().initSync();
+      handleSession(session);
     });
 
     return () => subscription.unsubscribe();
