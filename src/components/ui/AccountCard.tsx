@@ -34,7 +34,6 @@ export default function AccountCard({ account, onClick, compact = false }: Accou
   const isNegative   = balance < 0;
 
   // Soft color wash for the card background
-  const bgColor   = hexAlpha(account.color, 0.10);
   const bgGradient = `linear-gradient(135deg, ${hexAlpha(account.color, 0.14)} 0%, ${hexAlpha(account.color, 0.05)} 100%)`;
   const iconBg    = hexAlpha(account.color, 0.22);
 
