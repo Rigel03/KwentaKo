@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
 import { useStore } from '../store/useStore';
 import EmptyState from '../components/ui/EmptyState';
 import type { Category, CategoryType } from '../types';
