@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useStore, useUserId } from './store/useStore';
 import { supabase } from './lib/supabase';
 import AppShell from './components/layout/AppShell';
+import ToastContainer from './components/ui/ToastContainer';
 import BottomNav, { type Page } from './components/layout/BottomNav';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
@@ -103,19 +104,22 @@ export default function App() {
     );
   }
 
-  if (!userId) {
-    return <Auth />;
-  }
-
   return (
-    <AppShell>
-      {/* Page content */}
-      <div className="animate-fade-in" key={page}>
-        {renderPage()}
-      </div>
+    <>
+      {!userId ? (
+        <Auth />
+      ) : (
+        <AppShell>
+          {/* Page content */}
+          <div className="animate-fade-in" key={page}>
+            {renderPage()}
+          </div>
 
-      {/* Bottom Navigation */}
-      <BottomNav currentPage={navPage} onNavigate={(p) => setPage(p)} />
-    </AppShell>
+          {/* Bottom Navigation */}
+          <BottomNav currentPage={navPage} onNavigate={(p) => setPage(p)} />
+        </AppShell>
+      )}
+      <ToastContainer />
+    </>
   );
 }
