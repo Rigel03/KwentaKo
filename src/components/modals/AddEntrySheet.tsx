@@ -77,6 +77,25 @@ export default function AddEntrySheet() {
     if (!editingTxn) setCategoryId('');
   }, [type]);
 
+  // ── Intercept Back Button
+  useEffect(() => {
+    // Push a dummy state so the hardware back button pops this state instead of exiting the app
+    window.history.pushState({ sheetOpen: true }, '');
+
+    const handlePopState = () => {
+      closeAddSheet();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // If the component unmounts (sheet closes) and the history state is still ours, pop it.
+      if (window.history.state?.sheetOpen) {
+        window.history.back();
+      }
+    };
+  }, [closeAddSheet]);
+
   // ── Validation
   const displayAmount = liveAmount > 0 ? liveAmount : evaluatedAmount;
   const isValid =

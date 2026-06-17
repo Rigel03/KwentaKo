@@ -115,10 +115,14 @@ function CategoryForm({
   initial,
   onSave,
   onCancel,
+  onDelete,
+  onReorder,
 }: {
   initial?: Category;
   onSave: (c: Omit<Category, 'id' | 'sortOrder'>) => void;
   onCancel: () => void;
+  onDelete?: () => void;
+  onReorder?: (dir: 'up' | 'down') => void;
 }) {
   const [name,       setName]       = useState(initial?.name   ?? '');
   const [type,       setType]       = useState<CategoryType>(initial?.type  ?? 'expense');
@@ -198,14 +202,14 @@ function CategoryForm({
           {/* Search */}
           <div className="relative mb-2">
             <i
-              className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs"
+              className="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-xs"
               style={{ color: 'var(--text-3)' }}
             />
             <input
               value={iconSearch}
               onChange={(e) => { setIconSearch(e.target.value); setActiveGroup(null); }}
               placeholder="Search icons…"
-              className="input-field pl-8 text-sm"
+              className="input-field pr-10 pl-4 text-sm"
             />
           </div>
 
@@ -307,27 +311,63 @@ function CategoryForm({
           </div>
         </div>
 
-        <button
-          onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: false, isActive: true })}
-          disabled={!valid}
-          className="btn-primary"
-        >
-          {initial ? 'Save Changes' : 'Add Category'}
-        </button>
+        {initial ? (
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: false, isActive: true })}
+              disabled={!valid}
+              className="btn-primary"
+            >
+              Save Changes
+            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onReorder?.('up')}
+                className="flex-1 py-3 rounded-xl font-bold transition-all active:scale-95"
+                style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
+              >
+                <i className="fa-solid fa-arrow-left mr-2" /> Move Left
+              </button>
+              <button
+                onClick={() => onReorder?.('down')}
+                className="flex-1 py-3 rounded-xl font-bold transition-all active:scale-95"
+                style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
+              >
+                Move Right <i className="fa-solid fa-arrow-right ml-2" />
+              </button>
+            </div>
+            {!initial.isDefault && (
+              <button
+                onClick={onDelete}
+                className="py-3 rounded-xl font-bold text-red-500 bg-red-500/10 transition-all active:scale-95"
+              >
+                Delete Category
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: false, isActive: true })}
+            disabled={!valid}
+            className="btn-primary"
+          >
+            Add Category
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 export default function Categories() {
-  const { categories, addCategory, updateCategory, showToast } = useStore();
+  const { categories, addCategory, updateCategory, deleteCategory, reorderCategory, showToast } = useStore();
   const [showForm,    setShowForm]    = useState(false);
   const [editingCat,  setEditingCat]  = useState<Category | null>(null);
   const [filterType,  setFilterType]  = useState<CategoryType | 'all'>('all');
 
-  const filtered = categories.filter(
-    (c) => filterType === 'all' || c.type === filterType,
-  );
+  const filtered = categories
+    .filter((c) => filterType === 'all' || c.type === filterType)
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
   const handleSave = (data: Omit<Category, 'id' | 'sortOrder'>) => {
     if (editingCat) {
@@ -339,6 +379,15 @@ export default function Categories() {
     }
     setShowForm(false);
     setEditingCat(null);
+  };
+
+  const handleDelete = () => {
+    if (editingCat && confirm('Are you sure you want to delete this category?')) {
+      deleteCategory(editingCat.id);
+      showToast('Category deleted');
+      setShowForm(false);
+      setEditingCat(null);
+    }
   };
 
   const openEdit = (cat: Category) => {
@@ -444,6 +493,10 @@ export default function Categories() {
           initial={editingCat ?? undefined}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditingCat(null); }}
+          onDelete={handleDelete}
+          onReorder={(dir) => {
+            if (editingCat) reorderCategory(editingCat.id, dir);
+          }}
         />
       )}
     </div>

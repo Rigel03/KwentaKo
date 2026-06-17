@@ -48,6 +48,7 @@ interface KwentaKoStore {
   addCategory: (category: Category) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+  reorderCategory: (id: string, direction: 'up' | 'down') => void;
 
   // ── Settings Actions
   updateSettings: (updates: Partial<AppSettings>) => void;
@@ -219,6 +220,30 @@ export const useStore = create<KwentaKoStore>()(
         supabase.from('categories').delete().eq('client_id', id).then(({ error }) => error && console.error(error));
       },
 
+      reorderCategory: (id, direction) => {
+        set((s) => {
+          const cats = [...s.categories].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+          const idx = cats.findIndex(c => c.id === id);
+          if (idx === -1) return s;
+          
+          if (direction === 'up' && idx > 0) {
+            [cats[idx - 1], cats[idx]] = [cats[idx], cats[idx - 1]];
+          } else if (direction === 'down' && idx < cats.length - 1) {
+            [cats[idx], cats[idx + 1]] = [cats[idx + 1], cats[idx]];
+          } else {
+            return s;
+          }
+          
+          const updatedCats = cats.map((c, i) => ({ ...c, sortOrder: i + 1 }));
+          
+          updatedCats.forEach(c => {
+             supabase.from('categories').update({ sort_order: c.sortOrder }).eq('client_id', c.id).then(({ error }) => error && console.error(error));
+          });
+          
+          return { categories: updatedCats };
+        });
+      },
+
       // ── Settings Actions
       updateSettings: (updates) => {
         set((s) => {
@@ -254,9 +279,7 @@ export const useStore = create<KwentaKoStore>()(
 
       clearAllData: () => {
         set({
-          accounts: [],
           transactions: [],
-          categories: [],
           settings: {
             theme: 'system',
             currency: 'PHP',
