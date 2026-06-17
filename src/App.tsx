@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useStore } from './store/useStore';
+import { useStore, useUserId } from './store/useStore';
+import { supabase } from './lib/supabase';
 import AppShell from './components/layout/AppShell';
 import BottomNav, { type Page } from './components/layout/BottomNav';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Accounts from './pages/Accounts';
@@ -11,7 +13,26 @@ import Categories from './pages/Categories';
 
 export default function App() {
   const [page, setPage] = useState<Page | 'categories'>('dashboard');
+  const [authInitialized, setAuthInitialized] = useState(false);
   const settings = useStore((s) => s.settings);
+  const userId = useUserId();
+  const setUserId = useStore((s) => s.setUserId);
+
+  // ── Auth Initialization
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+      if (session?.user?.id) useStore.getState().initSync();
+      setAuthInitialized(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+      if (session?.user?.id) useStore.getState().initSync();
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setUserId]);
 
   // ── Dark mode effect
   useEffect(() => {
@@ -61,6 +82,18 @@ export default function App() {
 
   // Map categories back to settings for nav highlighting
   const navPage: Page = page === 'categories' ? 'settings' : page as Page;
+
+  if (!authInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: 'var(--accent)' }} />
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return <Auth />;
+  }
 
   return (
     <AppShell>

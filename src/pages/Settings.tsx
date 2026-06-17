@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { exportTransactionsCSV, downloadCSV } from '../utils/csv';
+import { exportBackupJSON, importBackupJSON } from '../utils/backup';
 import { format } from 'date-fns';
+import { supabase } from '../lib/supabase';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { ThemeMode } from '../types';
 
@@ -68,10 +70,34 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
     showToast('Export downloaded ✓');
   };
 
+  const handleBackupJSON = () => {
+    exportBackupJSON();
+    showToast('Backup downloaded ✓');
+  };
+
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    importBackupJSON(file)
+      .then(() => showToast('Data restored from backup ✓'))
+      .catch((err) => {
+        console.error(err);
+        showToast('Failed to restore backup', 'error');
+      })
+      .finally(() => {
+        e.target.value = ''; // Reset input
+      });
+  };
+
   const handleClearData = () => {
     clearAllData();
     showToast('All data cleared');
     setShowClearConfirm(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -134,8 +160,28 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
         <div className="rounded-2xl mx-4 overflow-hidden" style={{ background: 'var(--surface)' }}>
           <p className="px-4 pt-4 pb-1 section-label">Data</p>
           <SettingsRow
-            icon="fa-file-csv" label="Export CSV"
-            sublabel={`${transactions.length} transactions`}
+            icon="fa-file-export" label="Backup Data (JSON)"
+            sublabel="Save a copy of everything"
+            onClick={handleBackupJSON}
+          />
+          <div style={{ height: 1, margin: '0 16px', background: 'var(--divider)' }} />
+          <SettingsRow
+            icon="fa-file-import" label="Restore Backup (JSON)"
+            sublabel="Import from a previous backup file"
+            onClick={() => document.getElementById('json-upload')?.click()}
+          >
+            <input
+              id="json-upload"
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportJSON}
+            />
+          </SettingsRow>
+          <div style={{ height: 1, margin: '0 16px', background: 'var(--divider)' }} />
+          <SettingsRow
+            icon="fa-file-csv" label="Export to CSV"
+            sublabel="Export transactions for Excel"
             onClick={handleExportCSV}
           />
           <div style={{ height: 1, margin: '0 16px', background: 'var(--divider)' }} />
@@ -144,6 +190,11 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             sublabel="Cannot be undone"
             onClick={() => setShowClearConfirm(true)}
             danger
+          />
+          <div style={{ height: 1, margin: '0 16px', background: 'var(--divider)' }} />
+          <SettingsRow
+            icon="fa-arrow-right-from-bracket" label="Log Out"
+            onClick={handleLogout}
           />
         </div>
 
