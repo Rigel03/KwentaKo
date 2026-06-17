@@ -6,6 +6,7 @@ import { formatPHP } from '../utils/currency';
 import AccountCard from '../components/ui/AccountCard';
 import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
+import WelcomeModal from '../components/modals/WelcomeModal';
 import type { PeriodFilter } from '../types';
 
 const PERIODS: { id: PeriodFilter; label: string }[] = [
@@ -245,6 +246,9 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
           </div>
         </section>
       </div>
+
+      {/* ── Welcome Onboarding Modal ────────────────────────────────────── */}
+      {!settings.userName && <WelcomeModal />}
     </div>
   );
 }
