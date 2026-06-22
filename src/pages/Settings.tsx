@@ -267,7 +267,7 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             </div>
             <div>
               <p className="text-sm font-bold text-slate-900 dark:text-white">KwentaKo</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">Personal Money Tracker v1.0</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Personal Money Tracker v1.1</p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                 Offline-first · PHP · localStorage
               </p>

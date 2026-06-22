@@ -13,7 +13,7 @@ export default defineConfig({
         short_name: 'KwentaKo',
         description: 'Your personal money diary. Track income, expenses, and transfers across all your accounts.',
         theme_color: '#2563EB',
-        background_color: '#0F172A',
+        background_color: '#2563EB',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',

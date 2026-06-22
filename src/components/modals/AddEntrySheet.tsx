@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore';
 import { evaluateExpression } from '../../utils/currency';
 import NumPad from './NumPad';
 import ConfirmDialog from '../ui/ConfirmDialog';
+import DateTimePicker from './DateTimePicker';
 import type { Transaction, TransactionType } from '../../types';
 
 const TYPE_CONFIG: Record<TransactionType, {
@@ -69,6 +70,7 @@ export default function AddEntrySheet() {
   );
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTransferDeleteConfirm, setShowTransferDeleteConfirm] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const noteRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -100,6 +102,22 @@ export default function AddEntrySheet() {
   useEffect(() => {
     if (!editingTxn) setCategoryId('');
   }, [type]);
+
+  // Handle hardware back button
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      closeAddSheet();
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [closeAddSheet]);
+
+  const handleClose = () => {
+    window.history.back();
+  };
 
   // ── Validation
   const displayAmount = liveAmount > 0 ? liveAmount : evaluatedAmount;
@@ -149,7 +167,7 @@ export default function AddEntrySheet() {
       showToast(type === 'income' ? 'Income logged ✓' : 'Expense logged ✓');
     }
 
-    closeAddSheet();
+    handleClose();
   };
 
   // ── Delete
@@ -166,20 +184,20 @@ export default function AddEntrySheet() {
     if (!editingTxn) return;
     deleteTransaction(editingTxn.id);
     showToast('Transaction deleted');
-    closeAddSheet();
+    handleClose();
   };
 
   const confirmDeletePair = () => {
     if (!editingTxn?.transferGroupId) return;
     deleteTransactionPair(editingTxn.transferGroupId);
     showToast('Transfer deleted');
-    closeAddSheet();
+    handleClose();
   };
 
   return (
     <>
       {/* ── Overlay ─────────────────────────────────────────────────────── */}
-      <div className="sheet-overlay animate-fade-in" onClick={closeAddSheet} />
+      <div className="sheet-overlay animate-fade-in" onClick={handleClose} />
 
       {/* ── Sheet Panel ─────────────────────────────────────────────────── */}
       <div ref={panelRef} className="sheet-panel animate-slide-up">
@@ -257,14 +275,19 @@ export default function AddEntrySheet() {
                   id={`account-pill-${acc.id}`}
                   onClick={() => setAccountId(acc.id)}
                   className={`account-pill flex-shrink-0 ${
-                    accountId === acc.id ? 'account-pill-selected' : 'bg-white dark:bg-slate-800'
+                    accountId === acc.id ? 'account-pill-selected' : ''
                   }`}
+                  style={
+                    accountId === acc.id
+                      ? undefined
+                      : { backgroundColor: `${acc.color}20`, border: `1px solid ${acc.color}30` }
+                  }
                 >
                   <i
                     className={`fa-solid ${acc.icon} text-xs`}
-                    style={{ color: acc.color }}
+                    style={{ color: accountId === acc.id ? '#fff' : acc.color }}
                   />
-                  <span>{acc.name}</span>
+                  <span className={accountId === acc.id ? 'text-white' : 'text-slate-700 dark:text-slate-300'}>{acc.name}</span>
                 </button>
               ))}
             </div>
@@ -285,14 +308,19 @@ export default function AddEntrySheet() {
                         id={`to-account-pill-${acc.id}`}
                         onClick={() => setToAccountId(acc.id)}
                         className={`account-pill flex-shrink-0 ${
-                          toAccountId === acc.id ? 'account-pill-selected' : 'bg-white dark:bg-slate-800'
+                          toAccountId === acc.id ? 'account-pill-selected' : ''
                         }`}
+                        style={
+                          toAccountId === acc.id
+                            ? undefined
+                            : { backgroundColor: `${acc.color}20`, border: `1px solid ${acc.color}30` }
+                        }
                       >
                         <i
                           className={`fa-solid ${acc.icon} text-xs`}
-                          style={{ color: acc.color }}
+                          style={{ color: toAccountId === acc.id ? '#fff' : acc.color }}
                         />
-                        <span>{acc.name}</span>
+                        <span className={toAccountId === acc.id ? 'text-white' : 'text-slate-700 dark:text-slate-300'}>{acc.name}</span>
                       </button>
                     ))}
                 </div>
@@ -309,18 +337,20 @@ export default function AddEntrySheet() {
                   key={cat.id}
                   id={`cat-tile-${cat.id}`}
                   onClick={() => setCategoryId(cat.id)}
-                  className={`cat-tile ${categoryId === cat.id ? 'cat-tile-selected' : ''}`}
+                  className={`cat-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 rounded-2xl transition-all ${
+                    categoryId === cat.id ? 'cat-tile-selected ring-2 ring-indigo-500 scale-105' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  }`}
                 >
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
                     style={{ backgroundColor: `${cat.color}25` }}
                   >
                     <i
-                      className={`fa-solid ${cat.icon} text-sm`}
+                      className={`fa-solid ${cat.icon} text-base`}
                       style={{ color: cat.color }}
                     />
                   </div>
-                  <span className="leading-tight text-slate-600 dark:text-slate-300 text-center">
+                  <span className="leading-tight text-xs text-slate-700 dark:text-slate-300 text-center font-medium line-clamp-2">
                     {cat.name}
                   </span>
                 </button>
@@ -345,32 +375,21 @@ export default function AddEntrySheet() {
 
           {/* ── Date Selector ────────────────────────────────────────────── */}
           <div>
-            <p className="section-label">Date</p>
-            <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-3">
-              <button
-                onClick={goBack}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                aria-label="Previous day"
-              >
-                <i className="fa-solid fa-chevron-left text-slate-500 text-sm" />
-              </button>
-
-              <div className="flex items-center gap-2">
-                <i className="fa-solid fa-calendar text-indigo-500 text-sm" />
+            <p className="section-label">Date & Time</p>
+            <button
+              onClick={() => setShowDatePicker(true)}
+              className="w-full flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-3.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+                  <i className="fa-solid fa-calendar text-indigo-600 dark:text-indigo-400 text-sm" />
+                </div>
                 <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  {format(date, 'EEE, MMM d, yyyy')}
+                  {format(date, 'MMM d, yyyy • h:mm a')}
                 </span>
               </div>
-
-              <button
-                onClick={goForward}
-                disabled={!canGoForward}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-30"
-                aria-label="Next day"
-              >
-                <i className="fa-solid fa-chevron-right text-slate-500 text-sm" />
-              </button>
-            </div>
+              <i className="fa-solid fa-chevron-right text-slate-400 text-xs" />
+            </button>
           </div>
 
           {/* ── Save Button ──────────────────────────────────────────────── */}
@@ -417,6 +436,16 @@ export default function AddEntrySheet() {
         isDangerous
         onConfirm={confirmDeletePair}
         onCancel={() => setShowTransferDeleteConfirm(false)}
+      />
+
+      <DateTimePicker
+        isOpen={showDatePicker}
+        initialDate={date}
+        onConfirm={(d) => {
+          setDate(d);
+          setShowDatePicker(false);
+        }}
+        onCancel={() => setShowDatePicker(false)}
       />
     </>
   );

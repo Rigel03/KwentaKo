@@ -16,11 +16,13 @@ const PERIODS: { id: PeriodFilter; label: string }[] = [
   { id: 'year',  label: 'Year' },
 ];
 
-const GREETINGS = () => {
+const GREETINGS = (name?: string) => {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  let greeting = 'Good evening';
+  if (h < 12) greeting = 'Good morning';
+  else if (h < 17) greeting = 'Good afternoon';
+  
+  return name ? `${greeting}, ${name}` : greeting;
 };
 
 interface DashboardProps {
@@ -34,6 +36,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
 
   const accounts     = useStore((s) => s.accounts);
   const transactions = useStore((s) => s.transactions);
+  const settings     = useStore((s) => s.settings);
   const openAddSheet = useStore((s) => s.openAddSheet);
 
   const activeAccounts = accounts.filter((a) => a.isActive);
@@ -63,12 +66,12 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-6">
       {/* ── Hero Header ──────────────────────────────────────────────────── */}
-      <div className="hero-gradient pt-safe px-5 pb-10">
+      <div className="hero-gradient pt-safe px-5 pb-12">
         {/* Top bar */}
         <div className="pt-4 flex items-center justify-between mb-6">
           <div>
             <p className="text-indigo-200 text-sm font-medium">
-              {GREETINGS()} 👋
+              {GREETINGS(settings.userName)} 👋
             </p>
             <p className="text-white font-semibold text-base mt-0.5">
               {format(today, 'EEEE, MMMM d')}
@@ -76,7 +79,8 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
           </div>
           <div className="flex items-center gap-2">
             <button
-              aria-label="Notifications"
+              onClick={onNavigateToTransactions}
+              aria-label="History"
               className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors relative"
             >
               <i className="fa-solid fa-bell text-white text-sm" />
@@ -112,7 +116,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
       </div>
 
       {/* ── Content ──────────────────────────────────────────────────────── */}
-      <div className="px-4 -mt-6 space-y-4">
+      <div className="px-4 -mt-8 space-y-4">
 
         {/* ── Account Cards Row ─────────────────────────────────────────── */}
         <section>
@@ -139,12 +143,11 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
               />
             </div>
           ) : (
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            <div className="flex flex-col gap-3 pb-2">
               {activeAccounts.map((acc) => (
                 <AccountCard
                   key={acc.id}
                   account={acc}
-                  compact
                   onClick={onNavigateToAccounts}
                 />
               ))}

@@ -56,26 +56,22 @@ export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   };
 
   return (
-    <nav className="bottom-nav bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
-      {/* Left 2 items */}
-      {LEFT_ITEMS.map(renderItem)}
+    <>
+      <nav className="bottom-nav bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-2.5 z-40 relative flex justify-around px-2">
+        {NAV_ITEMS.map((item) => renderItem(item))}
+      </nav>
 
-      {/* FAB slot placeholder + actual FAB */}
-      <React.Fragment>
-        <div className="w-16 flex-shrink-0" />
-        <button
-          id="fab-add-entry"
-          aria-label="Add new entry"
-          onClick={() => openAddSheet()}
-          className="fab absolute left-1/2 -translate-x-1/2 -translate-y-6 shadow-xl"
-        >
-          <i className="fa-solid fa-plus text-xl" />
-        </button>
-      </React.Fragment>
-
-      {/* Right 3 items */}
-      {RIGHT_ITEMS.map(renderItem)}
-    </nav>
+      {/* Floating Add Button */}
+      <button
+        id="fab-add-entry"
+        aria-label="Add new entry"
+        onClick={() => openAddSheet()}
+        className="fixed bottom-24 right-5 w-14 h-14 rounded-full shadow-xl flex items-center justify-center animate-fab-breathe z-50 text-white"
+        style={{ background: 'linear-gradient(135deg, #4F46E5, #2563EB)' }}
+      >
+        <i className="fa-solid fa-plus text-xl" />
+      </button>
+    </>
   );
 }
 

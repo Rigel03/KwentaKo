@@ -66,7 +66,7 @@ export default function NumPad({ expression, onChange, onEvaluate }: NumPadProps
   };
 
   return (
-    <div className="grid grid-cols-4 gap-2 px-4">
+    <div className="grid grid-cols-4 gap-2 w-full">
       {ROWS.flat().map((key, idx) => (
         <button
           key={`${key}-${idx}`}

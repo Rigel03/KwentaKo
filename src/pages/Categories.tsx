@@ -127,12 +127,11 @@ function CategoryActionMenu({
   return (
     <div className="fixed inset-0 z-[60] flex items-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full rounded-t-3xl p-5 space-y-3 animate-slide-up pb-8" style={{ background: 'var(--surface)' }}>
-        <h3 className="text-center font-bold mb-2 text-lg" style={{ color: 'var(--text-1)' }}>{category.name}</h3>
+      <div className="relative w-full rounded-t-3xl p-5 space-y-3 animate-slide-up pb-8 bg-white dark:bg-slate-900">
+        <h3 className="text-center font-bold mb-2 text-lg text-slate-900 dark:text-white">{category.name}</h3>
         <button
           onClick={onModify}
-          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95"
-          style={{ background: 'var(--surface-2)', color: 'var(--text-1)' }}
+          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white"
         >
           <i className="fa-solid fa-pen mr-2" /> Modify Category
         </button>
@@ -146,8 +145,7 @@ function CategoryActionMenu({
         )}
         <button
           onClick={onCancel}
-          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95 mt-2"
-          style={{ color: 'var(--text-3)' }}
+          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95 mt-2 text-slate-500 dark:text-slate-400"
         >
           Cancel
         </button>
@@ -188,18 +186,17 @@ function CategoryForm({
     <div className="fixed inset-0 z-[60] flex items-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
       <div
-        className="relative w-full rounded-t-3xl p-5 space-y-4 animate-slide-up overflow-y-auto"
-        style={{ background: 'var(--surface)', maxHeight: '92svh' }}
+        className="relative w-full rounded-t-3xl p-5 space-y-4 animate-slide-up overflow-y-auto bg-white dark:bg-slate-900"
+        style={{ maxHeight: '92svh' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
             {initial ? 'Edit Category' : 'New Category'}
           </h3>
           <button
             onClick={onCancel}
-            className="w-8 h-8 flex items-center justify-center rounded-full"
-            style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
           >
             <i className="fa-solid fa-xmark text-sm" />
           </button>
@@ -225,11 +222,12 @@ function CategoryForm({
               <button
                 key={opt.id}
                 onClick={() => setType(opt.id)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
-                style={{
-                  background: type === opt.id ? opt.color : 'var(--surface-2)',
-                  color:      type === opt.id ? '#fff'    : 'var(--text-2)',
-                }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  type === opt.id
+                    ? 'text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                }`}
+                style={type === opt.id ? { background: opt.color } : undefined}
               >
                 {opt.label}
               </button>
@@ -243,8 +241,7 @@ function CategoryForm({
           {/* Search */}
           <div className="relative mb-2">
             <i
-              className="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-xs"
-              style={{ color: 'var(--text-3)' }}
+              className="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500"
             />
             <input
               value={iconSearch}
@@ -259,11 +256,11 @@ function CategoryForm({
             <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide">
               <button
                 onClick={() => setActiveGroup(null)}
-                className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all"
-                style={{
-                  background: activeGroup === null ? 'var(--text-1)' : 'var(--surface-2)',
-                  color:      activeGroup === null ? 'var(--bg)'     : 'var(--text-2)',
-                }}
+                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  activeGroup === null
+                    ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                }`}
               >
                 All
               </button>
@@ -271,11 +268,11 @@ function CategoryForm({
                 <button
                   key={g.group}
                   onClick={() => setActiveGroup(g.group === activeGroup ? null : g.group)}
-                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all"
-                  style={{
-                    background: activeGroup === g.group ? 'var(--text-1)' : 'var(--surface-2)',
-                    color:      activeGroup === g.group ? 'var(--bg)'     : 'var(--text-2)',
-                  }}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    activeGroup === g.group
+                      ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  }`}
                 >
                   {g.group}
                 </button>
@@ -293,18 +290,20 @@ function CategoryForm({
                 key={ic}
                 onClick={() => setIcon(ic)}
                 title={ic.replace('fa-', '')}
-                className="aspect-square rounded-xl flex items-center justify-center text-base transition-all"
-                style={{
-                  background: icon === ic ? color          : 'var(--surface-2)',
-                  color:      icon === ic ? '#fff'         : 'var(--text-2)',
-                  boxShadow:  icon === ic ? `0 0 0 2px ${color}` : 'none',
-                }}
+                className={`aspect-square rounded-xl flex items-center justify-center text-base transition-all ${
+                  icon === ic ? 'text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                }`}
+                style={
+                  icon === ic
+                    ? { background: color, boxShadow: `0 0 0 2px ${color}` }
+                    : undefined
+                }
               >
                 <i className={`fa-solid ${ic}`} />
               </button>
             ))}
             {displayIcons.length === 0 && (
-              <p className="col-span-6 text-center text-xs py-4" style={{ color: 'var(--text-3)' }}>
+              <p className="col-span-6 text-center text-xs py-4 text-slate-400 dark:text-slate-500">
                 No icons found
               </p>
             )}
@@ -332,10 +331,7 @@ function CategoryForm({
         </div>
 
         {/* Preview */}
-        <div
-          className="flex items-center gap-3 p-3 rounded-xl"
-          style={{ background: 'var(--surface-2)' }}
-        >
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ backgroundColor: `${color}20` }}
@@ -343,10 +339,10 @@ function CategoryForm({
             <i className={`fa-solid ${icon}`} style={{ color }} />
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
               {name || 'Category Name'}
             </p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {TYPE_OPTIONS.find((t) => t.id === type)?.label}
             </p>
           </div>
@@ -405,24 +401,17 @@ export default function Categories() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
       {/* Header */}
-      <div
-        className="px-4 pt-6 pb-4 sticky top-0 z-10"
-        style={{ background: 'var(--bg)', boxShadow: '0 1px 0 var(--border)' }}
-      >
+      <div className="px-4 pt-6 pb-4 sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-3">
-          <h1
-            className="font-bold"
-            style={{ color: 'var(--text-1)', fontSize: 22, letterSpacing: '-0.01em' }}
-          >
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             Categories
           </h1>
           <button
             id="add-category-btn"
             onClick={() => { setEditingCat(null); setShowForm(true); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors"
-            style={{ background: 'var(--accent)', color: '#fff' }}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors bg-indigo-600 text-white"
           >
             <i className="fa-solid fa-plus text-xs" />
             Add
@@ -435,11 +424,11 @@ export default function Categories() {
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className="flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors"
-              style={{
-                background: filterType === t ? 'var(--text-1)' : 'var(--surface-2)',
-                color:      filterType === t ? 'var(--bg)'     : 'var(--text-2)',
-              }}
+              className={`flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${
+                filterType === t
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+              }`}
             >
               {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
@@ -476,13 +465,10 @@ export default function Categories() {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`flex items-center gap-3 p-3 rounded-2xl transition-shadow ${
-                            snapshot.isDragging ? 'shadow-lg z-50' : ''
+                          className={`flex items-center gap-3 p-3 rounded-2xl transition-shadow bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 ${
+                            snapshot.isDragging ? 'shadow-xl z-50 ring-2 ring-indigo-500' : ''
                           }`}
-                          style={{
-                            background: 'var(--surface)',
-                            ...provided.draggableProps.style,
-                          }}
+                          style={provided.draggableProps.style}
                         >
                           <button
                             className="flex items-center gap-3 flex-1 text-left"
@@ -495,10 +481,10 @@ export default function Categories() {
                               <i className={`fa-solid ${cat.icon} text-sm`} style={{ color: cat.color }} />
                             </div>
                             <div className="flex-1">
-                              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>
+                              <p className="font-semibold text-slate-900 dark:text-white">
                                 {cat.name}
                               </p>
-                              <p className="text-xs capitalize" style={{ color: 'var(--text-3)' }}>
+                              <p className="text-xs capitalize text-slate-500 dark:text-slate-400">
                                 {cat.type}
                               </p>
                             </div>
@@ -506,9 +492,9 @@ export default function Categories() {
 
                           <div
                             {...provided.dragHandleProps}
-                            className={`p-2 shrink-0 ${filterType !== 'all' ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                            className={`p-2 shrink-0 text-slate-400 dark:text-slate-500 ${filterType !== 'all' ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
                           >
-                            <i className="fa-solid fa-bars text-lg" style={{ color: 'var(--text-3)' }} />
+                            <i className="fa-solid fa-bars text-lg" />
                           </div>
                         </div>
                       )}

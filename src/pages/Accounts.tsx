@@ -47,11 +47,11 @@ function AccountForm({
         style={{ background: 'var(--surface)' }}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
             {initial?.id ? 'Edit Account' : 'New Account'}
           </h3>
-          <button onClick={onCancel} className="btn-ghost p-2">
-            <i className="fa-solid fa-xmark" />
+          <button onClick={onCancel} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+            <i className="fa-solid fa-xmark text-lg" />
           </button>
         </div>
 
@@ -75,11 +75,11 @@ function AccountForm({
               <button
                 key={t.id}
                 onClick={() => setType(t.id)}
-                className="py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1.5 transition-all"
-                style={{
-                  background: type === t.id ? 'var(--accent)' : 'var(--surface-2)',
-                  color:      type === t.id ? '#fff'          : 'var(--text-2)',
-                }}
+                className={`py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
+                  type === t.id
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
               >
                 <i className={`fa-solid ${t.icon} text-sm`} />
                 {t.label}
@@ -99,7 +99,7 @@ function AccountForm({
                 className={`w-9 h-9 rounded-xl transition-transform ${color === c ? 'scale-110' : ''}`}
                 style={{
                   backgroundColor: c,
-                  boxShadow: color === c ? `0 0 0 2px var(--surface), 0 0 0 4px ${c}` : 'none',
+                  boxShadow: color === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : 'none',
                 }}
                 aria-label={`Color ${c}`}
               />
@@ -108,10 +108,7 @@ function AccountForm({
         </div>
 
         {/* Preview */}
-        <div
-          className="flex items-center gap-3 p-3 rounded-xl"
-          style={{ background: 'var(--surface-2)' }}
-        >
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ backgroundColor: `${color}20` }}
@@ -119,10 +116,10 @@ function AccountForm({
             <i className={`fa-solid ${icon} text-base`} style={{ color }} />
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
               {name || 'Account Name'}
             </p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {ACCOUNT_TYPES.find((t) => t.id === type)?.label}
             </p>
           </div>
@@ -131,7 +128,7 @@ function AccountForm({
         <button
           onClick={() => valid && onSave({ name: name.trim(), type, currency: 'PHP', icon, color, isActive: true })}
           disabled={!valid}
-          className="btn-primary"
+          className="w-full py-3.5 rounded-2xl text-white font-semibold text-base transition-all bg-indigo-600 disabled:opacity-50 disabled:bg-slate-400"
         >
           {initial?.id ? 'Save Changes' : 'Add Account'}
         </button>
@@ -179,32 +176,30 @@ export default function Accounts() {
     : [];
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
       {/* Header */}
       <div
-        className="px-4 pt-6 pb-4"
-        style={{ background: 'var(--bg)', boxShadow: '0 1px 0 var(--border)' }}
-      >
-        <div className="flex items-center justify-between mb-1">
-          <h1
-            className="font-bold"
-            style={{ color: 'var(--text-1)', fontSize: 22, letterSpacing: '-0.01em' }}
-          >
+      <div className="px-4 pt-6 pb-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             Accounts
           </h1>
           <button
             id="add-account-btn"
             onClick={() => { setEditingAccount(null); setShowForm(true); }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
-            style={{ background: 'var(--accent)', color: '#fff' }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors bg-indigo-600 text-white shadow-md hover:bg-indigo-700"
           >
             <i className="fa-solid fa-plus text-sm" />
           </button>
         </div>
-        <p style={{ color: 'var(--text-3)', fontSize: 13 }}>
-          Net worth:{'  '}
-          <span style={{ color: 'var(--text-1)', fontWeight: 700 }}>{formatPHP(netWorth)}</span>
-        </p>
+        <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-4 mt-4 shadow-inner border border-slate-200/50 dark:border-slate-700/50">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">
+            Total Net Worth
+          </p>
+          <p className="text-3xl font-bold font-mono text-indigo-600 dark:text-indigo-400">
+            {formatPHP(netWorth)}
+          </p>
+        </div>
       </div>
 
       <div className="px-4 py-4 space-y-4">
@@ -217,27 +212,25 @@ export default function Accounts() {
             onAction={() => setShowForm(true)}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {accounts.map((acc) => (
               <div key={acc.id} className="relative group">
                 <AccountCard account={acc} onClick={() => setSelectedAccountId(acc.id)} />
                 {/* Edit/Delete */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => { e.stopPropagation(); setEditingAccount(acc); setShowForm(true); }}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm"
-                    style={{ background: 'var(--surface)' }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shadow-md bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
                     aria-label="Edit account"
                   >
-                    <i className="fa-solid fa-pen text-xs" style={{ color: 'var(--text-2)' }} />
+                    <i className="fa-solid fa-pen text-xs" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(acc); }}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm"
-                    style={{ background: 'var(--surface)' }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shadow-md bg-red-500/80 backdrop-blur-sm text-white hover:bg-red-500"
                     aria-label="Delete account"
                   >
-                    <i className="fa-solid fa-trash text-xs" style={{ color: 'var(--expense)' }} />
+                    <i className="fa-solid fa-trash text-xs" />
                   </button>
                 </div>
               </div>
@@ -247,26 +240,26 @@ export default function Accounts() {
 
         {/* Account Transaction Drawer */}
         {selectedAccount && (
-          <div className="card animate-slide-down">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-4 animate-slide-up fixed bottom-0 left-0 right-0 z-50 rounded-b-none shadow-2xl max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white dark:bg-slate-900 pb-2 z-10 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
+                <p className="text-lg font-bold text-slate-900 dark:text-white">
                   {selectedAccount.name}
                 </p>
-                <p style={{ color: 'var(--text-3)', fontSize: 12 }}>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {accountTxns.length} transactions
                 </p>
               </div>
-              <button onClick={() => setSelectedAccountId(null)} className="btn-ghost p-2">
-                <i className="fa-solid fa-xmark" />
+              <button onClick={() => setSelectedAccountId(null)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center">
+                <i className="fa-solid fa-xmark text-sm" />
               </button>
             </div>
             {accountTxns.length === 0 ? (
-              <p className="text-sm text-center py-4" style={{ color: 'var(--text-3)' }}>
+              <p className="text-sm text-center py-6 text-slate-400 dark:text-slate-500">
                 No transactions for this account.
               </p>
             ) : (
-              <div style={{ borderTop: '1px solid var(--divider)' }}>
+              <div className="space-y-1">
                 {accountTxns.slice(0, 20).map((t) => (
                   <TransactionRow key={t.id} transaction={t} showAccount={false} />
                 ))}
