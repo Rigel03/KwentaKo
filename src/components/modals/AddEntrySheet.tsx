@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { format, parseISO, startOfDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { evaluateExpression } from '../../utils/currency';
 import NumPad from './NumPad';
