@@ -65,6 +65,7 @@ export interface AppSettings {
   defaultAccountId: string | null;
   analyticsDefaultPeriod: AnalyticsPeriod;
   hasSeededData: boolean;
+  userName?: string;   // Display name shown in greeting
 }
 
 export interface ToastMessage {

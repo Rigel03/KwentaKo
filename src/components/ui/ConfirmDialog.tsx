@@ -9,7 +9,6 @@ interface ConfirmDialogProps {
   isDangerous?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  /** If set, user must type this exact string before confirming */
   requiresTyping?: string;
 }
 
@@ -18,8 +17,8 @@ export default function ConfirmDialog({
   title,
   message,
   confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
-  isDangerous = false,
+  cancelLabel  = 'Cancel',
+  isDangerous  = false,
   onConfirm,
   onCancel,
   requiresTyping,
@@ -39,34 +38,35 @@ export default function ConfirmDialog({
   const canConfirm = requiresTyping ? typed === requiresTyping : true;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onCancel}
-      />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-5">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
 
-      {/* Dialog */}
-      <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-2xl animate-scale-in">
+      <div
+        className="relative w-full max-w-sm rounded-2xl p-6 animate-scale-in"
+        style={{ background: 'var(--surface)' }}
+      >
         {/* Icon */}
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto ${
-          isDangerous ? 'bg-red-100 dark:bg-red-900/30' : 'bg-blue-100 dark:bg-blue-900/30'
-        }`}>
-          <i className={`fa-solid ${isDangerous ? 'fa-triangle-exclamation text-red-500' : 'fa-circle-question text-blue-500'} text-xl`} />
+        <div
+          className="w-11 h-11 rounded-full flex items-center justify-center mb-4 mx-auto"
+          style={{ background: isDangerous ? 'rgba(220,38,38,0.1)' : 'rgba(29,78,216,0.1)' }}
+        >
+          <i
+            className={`fa-solid ${isDangerous ? 'fa-triangle-exclamation' : 'fa-circle-question'} text-lg`}
+            style={{ color: isDangerous ? 'var(--expense)' : 'var(--accent)' }}
+          />
         </div>
 
-        <h3 className="text-lg font-bold text-center text-slate-900 dark:text-white mb-2">
+        <h3 className="text-base font-bold text-center mb-2" style={{ color: 'var(--text-1)' }}>
           {title}
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 text-center leading-relaxed mb-4">
+        <p className="text-sm text-center leading-relaxed mb-5" style={{ color: 'var(--text-2)' }}>
           {message}
         </p>
 
-        {/* Typing confirmation */}
         {requiresTyping && (
-          <div className="mb-4">
-            <p className="text-xs text-slate-400 dark:text-slate-500 text-center mb-2">
-              Type <strong className="text-slate-700 dark:text-slate-300">"{requiresTyping}"</strong> to confirm
+          <div className="mb-5">
+            <p className="text-xs text-center mb-2" style={{ color: 'var(--text-3)' }}>
+              Type <strong style={{ color: 'var(--text-2)' }}>"{requiresTyping}"</strong> to confirm
             </p>
             <input
               ref={inputRef}
@@ -82,18 +82,19 @@ export default function ConfirmDialog({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors"
+            style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={!canConfirm}
-            className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-              isDangerous
-                ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
+            className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: isDangerous ? 'var(--expense)' : 'var(--accent)',
+              color: '#fff',
+            }}
           >
             {confirmLabel}
           </button>
