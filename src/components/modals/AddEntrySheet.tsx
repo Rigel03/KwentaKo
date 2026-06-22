@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { format, parseISO, addDays, isAfter, startOfDay } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { evaluateExpression } from '../../utils/currency';
 import NumPad from './NumPad';
@@ -126,9 +126,6 @@ export default function AddEntrySheet() {
     accountId !== '' &&
     categoryId !== '' &&
     (type !== 'transfer' || (toAccountId !== '' && toAccountId !== accountId));
-
-  // ── Date navigation
-  const today = startOfDay(new Date());
 
   // ── Save
   const handleSave = () => {
