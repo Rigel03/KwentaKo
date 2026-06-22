@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { exportTransactionsCSV, downloadCSV } from '../utils/csv';
+import { exportBackupJSON, importBackupJSON } from '../utils/backup';
+import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { ThemeMode } from '../types';
@@ -53,7 +55,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onNavigateToAccounts, onNavigateToCategories }: SettingsProps) {
-  const { settings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
+  const { settings, updateSettings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // We store amoled as a pseudo-theme in local state if selected
@@ -77,6 +79,30 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
     const filename = `kwentako_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
     downloadCSV(csv, filename);
     showToast('Export downloaded ✓');
+  };
+
+  const handleBackupJSON = () => {
+    exportBackupJSON();
+    showToast('Backup downloaded ✓');
+  };
+
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    importBackupJSON(file)
+      .then(() => showToast('Data restored from backup ✓'))
+      .catch((err) => {
+        console.error(err);
+        showToast('Failed to restore backup', 'error');
+      })
+      .finally(() => {
+        e.target.value = ''; // Reset input
+      });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   const handleClearData = () => {
@@ -174,6 +200,26 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             Data
           </p>
           <SettingsRow
+            icon="fa-file-export" label="Backup Data (JSON)"
+            sublabel="Save a complete copy of everything"
+            onClick={handleBackupJSON}
+          />
+          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
+          <SettingsRow
+            icon="fa-file-import" label="Restore Backup (JSON)"
+            sublabel="Import from a previous backup file"
+            onClick={() => document.getElementById('json-upload')?.click()}
+          >
+            <input
+              id="json-upload"
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportJSON}
+            />
+          </SettingsRow>
+          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
+          <SettingsRow
             icon="fa-file-csv" label="Export CSV"
             sublabel={`${transactions.length} transactions`}
             onClick={handleExportCSV}
@@ -183,6 +229,28 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             icon="fa-trash-can" label="Clear All Data"
             sublabel="Cannot be undone"
             onClick={() => setShowClearConfirm(true)}
+            danger
+          />
+        </div>
+
+        {/* Account */}
+        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
+          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            Profile & Account
+          </p>
+          <div className="px-4 py-2">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Your Name</p>
+            <input
+              value={settings.userName ?? ''}
+              onChange={(e) => updateSettings({ userName: e.target.value })}
+              placeholder="How should we call you?"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+            />
+          </div>
+          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800 mt-2" />
+          <SettingsRow
+            icon="fa-arrow-right-from-bracket" label="Log Out"
+            onClick={handleLogout}
             danger
           />
         </div>
