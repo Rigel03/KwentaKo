@@ -37,17 +37,22 @@ export default function TransactionRow({
 
   const amountPrefix = isIncome ? '+' : isTransfer ? '' : '-';
 
+  // Left accent bar color: use category color, or type fallback
+  const accentColor = category?.color
+    ?? (isIncome ? '#16A34A' : isTransfer ? '#2563EB' : '#EF4444');
+
   const timeStr = format(parseISO(transaction.date), 'h:mm a');
 
   return (
     <button
       className="txn-row w-full text-left"
+      style={{ '--txn-accent': accentColor } as React.CSSProperties}
       onClick={() => onClick?.() ?? openAddSheet(transaction.id)}
       aria-label={`${transaction.type} ${formatPHP(transaction.amount)}`}
     >
       {/* Category Icon */}
       <div
-        className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
+        className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-transform duration-150"
         style={{
           backgroundColor: category ? `${category.color}20` : '#94A3B820',
         }}

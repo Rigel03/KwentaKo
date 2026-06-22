@@ -5,10 +5,14 @@ import { format } from 'date-fns';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { ThemeMode } from '../types';
 
-const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string }[] = [
-  { id: 'system', label: 'System', icon: 'fa-circle-half-stroke' },
-  { id: 'light',  label: 'Light',  icon: 'fa-sun' },
-  { id: 'dark',   label: 'Dark',   icon: 'fa-moon' },
+// Extended to include AMOLED
+type ExtendedTheme = ThemeMode | 'amoled';
+
+const THEME_OPTIONS: { id: ExtendedTheme; label: string; icon: string; desc: string }[] = [
+  { id: 'system', label: 'System', icon: 'fa-circle-half-stroke', desc: 'Follow device' },
+  { id: 'light',  label: 'Light',  icon: 'fa-sun',                desc: 'Always light' },
+  { id: 'dark',   label: 'Dark',   icon: 'fa-moon',               desc: 'Always dark' },
+  { id: 'amoled', label: 'AMOLED', icon: 'fa-circle',             desc: 'Pure black' },
 ];
 
 function SettingsRow({
@@ -23,12 +27,20 @@ function SettingsRow({
       disabled={!onClick && !children}
       className={`w-full flex items-center gap-3 px-4 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${danger ? 'text-red-500' : ''}`}
     >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${danger ? 'bg-red-100 dark:bg-red-900/30' : 'bg-slate-100 dark:bg-slate-800'}`}>
-        <i className={`fa-solid ${icon} text-sm ${danger ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`} />
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+        danger ? 'bg-red-100 dark:bg-red-900/30' : 'bg-slate-100 dark:bg-slate-800'
+      }`}>
+        <i className={`fa-solid ${icon} text-sm ${
+          danger ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'
+        }`} />
       </div>
       <div className="flex-1 text-left">
-        <p className={`text-sm font-semibold ${danger ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>{label}</p>
-        {sublabel && <p className="text-xs text-slate-400 dark:text-slate-500">{sublabel}</p>}
+        <p className={`text-sm font-semibold ${danger ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>
+          {label}
+        </p>
+        {sublabel && (
+          <p className="text-xs text-slate-400 dark:text-slate-500">{sublabel}</p>
+        )}
       </div>
       {children ?? (onClick && <i className="fa-solid fa-chevron-right text-xs text-slate-400" />)}
     </button>
@@ -43,6 +55,22 @@ interface SettingsProps {
 export default function Settings({ onNavigateToAccounts, onNavigateToCategories }: SettingsProps) {
   const { settings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  // We store amoled as a pseudo-theme in local state if selected
+  const [localTheme, setLocalTheme] = useState<ExtendedTheme>(
+    (settings.theme as ExtendedTheme) ?? 'system'
+  );
+
+  const handleThemeChange = (t: ExtendedTheme) => {
+    setLocalTheme(t);
+    if (t === 'amoled') {
+      setTheme('dark'); // underlying store uses dark
+      document.documentElement.classList.add('amoled');
+    } else {
+      setTheme(t as ThemeMode);
+      document.documentElement.classList.remove('amoled');
+    }
+  };
 
   const handleExportCSV = () => {
     const csv = exportTransactionsCSV(transactions, accounts, categories);
@@ -68,29 +96,56 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
 
         {/* Appearance */}
         <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+          <p className="px-4 pt-4 pb-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
             Appearance
           </p>
 
-          {/* Theme */}
-          <div className="px-4 py-3">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">App Theme</p>
-            <div className="flex gap-2">
-              {THEME_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  id={`theme-${opt.id}`}
-                  onClick={() => setTheme(opt.id)}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-all ${
-                    settings.theme === opt.id
-                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
-                  }`}
-                >
-                  <i className={`fa-solid ${opt.icon} text-base`} />
-                  {opt.label}
-                </button>
-              ))}
+          {/* Theme — 2x2 grid */}
+          <div className="px-4 pb-4">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">App Theme</p>
+            <div className="grid grid-cols-2 gap-2">
+              {THEME_OPTIONS.map((opt) => {
+                const isActive = localTheme === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    id={`theme-${opt.id}`}
+                    onClick={() => handleThemeChange(opt.id)}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-2xl border text-left transition-all duration-200 ${
+                      isActive
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isActive
+                        ? 'bg-indigo-100 dark:bg-indigo-800'
+                        : opt.id === 'amoled'
+                        ? 'bg-black'
+                        : 'bg-slate-100 dark:bg-slate-800'
+                    }`}>
+                      <i className={`fa-solid ${opt.icon} text-sm ${
+                        isActive
+                          ? 'text-indigo-600 dark:text-indigo-400'
+                          : opt.id === 'amoled'
+                          ? 'text-white'
+                          : 'text-slate-500 dark:text-slate-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-semibold ${
+                        isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'
+                      }`}>
+                        {opt.label}
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{opt.desc}</p>
+                    </div>
+                    {isActive && (
+                      <i className="fa-solid fa-circle-check text-indigo-500 text-sm ml-auto" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -135,14 +190,19 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
         {/* App Info */}
         <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700 px-4 py-4">
           <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">About</p>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center">
-              <i className="fa-solid fa-peso-sign text-white text-lg" />
+          <div className="flex items-center gap-4">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #4F46E5, #2563EB)' }}
+            >
+              <i className="fa-solid fa-peso-sign text-white text-xl" />
             </div>
             <div>
               <p className="text-sm font-bold text-slate-900 dark:text-white">KwentaKo</p>
               <p className="text-xs text-slate-400 dark:text-slate-500">Personal Money Tracker v1.0</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">Offline-first • PHP • localStorage</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                Offline-first · PHP · localStorage
+              </p>
             </div>
           </div>
         </div>

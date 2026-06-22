@@ -42,6 +42,17 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
   const periodTxns = filterByPeriod(transactions, period);
   const { totalIncome, totalExpense } = getPeriodSummary(periodTxns);
 
+  // Spending ratio (capped at 100%)
+  const spendRatio = totalIncome > 0 ? Math.min((totalExpense / totalIncome) * 100, 100) : 0;
+  const spendBarColor =
+    spendRatio < 60
+      ? 'linear-gradient(90deg, #16A34A, #22C55E)'
+      : spendRatio < 85
+      ? 'linear-gradient(90deg, #D97706, #F59E0B)'
+      : 'linear-gradient(90deg, #DC2626, #EF4444)';
+  const spendLabel =
+    spendRatio < 60 ? 'Great shape 🟢' : spendRatio < 85 ? 'Watch your spending 🟡' : 'Over budget 🔴';
+
   // Recent transactions — last 10, sorted newest first
   const recentTxns = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -51,11 +62,12 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-6">
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="bg-blue-600 dark:bg-blue-700 pt-safe px-5 pb-8">
+      {/* ── Hero Header ──────────────────────────────────────────────────── */}
+      <div className="hero-gradient pt-safe px-5 pb-10">
+        {/* Top bar */}
         <div className="pt-4 flex items-center justify-between mb-6">
           <div>
-            <p className="text-blue-200 text-sm font-medium">
+            <p className="text-indigo-200 text-sm font-medium">
               {GREETINGS()} 👋
             </p>
             <p className="text-white font-semibold text-base mt-0.5">
@@ -65,50 +77,52 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
           <div className="flex items-center gap-2">
             <button
               aria-label="Notifications"
-              className="w-9 h-9 rounded-full bg-blue-500/40 hover:bg-blue-500/60 flex items-center justify-center transition-colors"
+              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors relative"
             >
               <i className="fa-solid fa-bell text-white text-sm" />
+              {/* Notification dot */}
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-yellow-400 rounded-full animate-ring-pulse" />
             </button>
           </div>
         </div>
 
-        {/* ── Net Worth Card ─────────────────────────────────────────────── */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5">
+        {/* ── Glassmorphism Net Worth Card ─────────────────────────────── */}
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-blue-100 text-sm font-medium">Total Net Worth</p>
+            <p className="text-white/70 text-xs font-semibold uppercase tracking-widest">Total Net Worth</p>
             <button
               onClick={() => setNetWorthVisible((v) => !v)}
               aria-label={netWorthVisible ? 'Hide balance' : 'Show balance'}
-              className="text-blue-200 hover:text-white transition-colors"
+              className="text-white/60 hover:text-white transition-colors"
             >
               <i className={`fa-solid ${netWorthVisible ? 'fa-eye-slash' : 'fa-eye'} text-sm`} />
             </button>
           </div>
           <p
             id="net-worth-amount"
-            className="net-worth-amount text-white mb-1"
-            style={{ filter: netWorthVisible ? 'none' : 'blur(12px)' }}
+            className="net-worth-amount text-white mb-1 mt-2"
+            style={{ filter: netWorthVisible ? 'none' : 'blur(12px)', transition: 'filter 0.3s ease' }}
           >
             {formatPHP(netWorth)}
           </p>
-          <p className="text-blue-200 text-xs">
+          <p className="text-white/50 text-xs mt-1">
             Across {activeAccounts.length} active account{activeAccounts.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
-      {/* ── Content ─────────────────────────────────────────────────────── */}
-      <div className="px-4 -mt-4 space-y-4">
+      {/* ── Content ──────────────────────────────────────────────────────── */}
+      <div className="px-4 -mt-6 space-y-4">
 
-        {/* ── Account Cards Row ────────────────────────────────────────── */}
+        {/* ── Account Cards Row ─────────────────────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+            <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
               Accounts
             </h2>
             <button
               onClick={onNavigateToAccounts}
-              className="text-xs text-blue-600 dark:text-blue-400 font-semibold"
+              className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold"
             >
               See All <i className="fa-solid fa-chevron-right text-xs ml-0.5" />
             </button>
@@ -138,7 +152,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
           )}
         </section>
 
-        {/* ── Period Toggle + Summary ──────────────────────────────────── */}
+        {/* ── Period Toggle + Summary ────────────────────────────────────── */}
         <section className="card">
           {/* Period Tabs */}
           <div className="flex items-center gap-1 mb-4 bg-slate-100 dark:bg-slate-700 rounded-xl p-1">
@@ -147,9 +161,9 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
                 key={p.id}
                 id={`period-${p.id}`}
                 onClick={() => setPeriod(p.id)}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                   period === p.id
-                    ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm'
+                    ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
@@ -165,12 +179,16 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
               amount={formatPHP(totalIncome)}
               icon="fa-arrow-down-to-line"
               variant="income"
+              percentage={100}
+              maxPercentage={100}
             />
             <StatCard
               label="Expenses"
               amount={formatPHP(totalExpense)}
               icon="fa-arrow-up-from-line"
               variant="expense"
+              percentage={spendRatio}
+              maxPercentage={100}
             />
           </div>
 
@@ -190,17 +208,40 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
               {formatPHP(totalIncome - totalExpense)}
             </span>
           </div>
+
+          {/* Spending Ratio Bar */}
+          {totalIncome > 0 && (
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                  Spending ratio
+                </span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  {spendLabel}
+                </span>
+              </div>
+              <div className="spending-bar-track">
+                <div
+                  className="spending-bar-fill animate-bar-grow"
+                  style={{ width: `${spendRatio}%`, background: spendBarColor }}
+                />
+              </div>
+              <p className="text-xs text-slate-400 mt-1 text-right">
+                {spendRatio.toFixed(0)}% of income spent
+              </p>
+            </div>
+          )}
         </section>
 
         {/* ── Recent Transactions ──────────────────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+            <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
               Recent Transactions
             </h2>
             <button
               onClick={onNavigateToTransactions}
-              className="text-xs text-blue-600 dark:text-blue-400 font-semibold"
+              className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold"
             >
               See All <i className="fa-solid fa-chevron-right text-xs ml-0.5" />
             </button>
@@ -225,24 +266,24 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
           )}
         </section>
 
-        {/* ── Quick Actions ─────────────────────────────────────────────── */}
+        {/* ── Quick Actions ──────────────────────────────────────────────── */}
         <section>
-          <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
             Quick Add
           </h2>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Income',   icon: 'fa-plus-circle',   color: '#16A34A', bg: 'bg-green-50 dark:bg-green-900/20', action: () => openAddSheet() },
-              { label: 'Expense',  icon: 'fa-minus-circle',  color: '#EF4444', bg: 'bg-red-50 dark:bg-red-900/20',    action: () => openAddSheet() },
-              { label: 'Transfer', icon: 'fa-right-left',    color: '#2563EB', bg: 'bg-blue-50 dark:bg-blue-900/20',  action: () => openAddSheet() },
+              { label: 'Income',   icon: 'fa-plus-circle',  bg: 'bg-gradient-to-br from-green-400 to-green-600', action: () => openAddSheet() },
+              { label: 'Expense',  icon: 'fa-minus-circle', bg: 'bg-gradient-to-br from-red-400 to-red-600',    action: () => openAddSheet() },
+              { label: 'Transfer', icon: 'fa-right-left',   bg: 'bg-gradient-to-br from-indigo-400 to-blue-600', action: () => openAddSheet() },
             ].map((q) => (
               <button
                 key={q.label}
                 onClick={q.action}
-                className={`${q.bg} rounded-2xl p-4 flex flex-col items-center gap-2 hover:opacity-80 transition-opacity active:scale-95`}
+                className={`${q.bg} rounded-2xl p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-all duration-150 active:scale-95 shadow-md`}
               >
-                <i className={`fa-solid ${q.icon} text-xl`} style={{ color: q.color }} />
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{q.label}</span>
+                <i className={`fa-solid ${q.icon} text-xl text-white`} />
+                <span className="text-xs font-semibold text-white">{q.label}</span>
               </button>
             ))}
           </div>

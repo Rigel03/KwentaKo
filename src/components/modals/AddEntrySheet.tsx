@@ -6,10 +6,34 @@ import NumPad from './NumPad';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import type { Transaction, TransactionType } from '../../types';
 
-const TYPE_CONFIG = {
-  income:   { label: 'Income',   color: 'bg-green-500', tab: 'text-green-600 dark:text-green-400' },
-  expense:  { label: 'Expense',  color: 'bg-red-500',   tab: 'text-red-500 dark:text-red-400'     },
-  transfer: { label: 'Transfer', color: 'bg-blue-500',  tab: 'text-blue-600 dark:text-blue-400'   },
+const TYPE_CONFIG: Record<TransactionType, {
+  label: string;
+  gradient: string;
+  tintLight: string;
+  tintDark: string;
+  tab: string;
+}> = {
+  income:   {
+    label: 'Income',
+    gradient: 'linear-gradient(135deg, #16A34A, #22C55E)',
+    tintLight: '#f0fdf4',
+    tintDark: '#14532d1a',
+    tab: 'text-green-600 dark:text-green-400',
+  },
+  expense:  {
+    label: 'Expense',
+    gradient: 'linear-gradient(135deg, #DC2626, #EF4444)',
+    tintLight: '#fff1f2',
+    tintDark: '#7f1d1d1a',
+    tab: 'text-red-500 dark:text-red-400',
+  },
+  transfer: {
+    label: 'Transfer',
+    gradient: 'linear-gradient(135deg, #4F46E5, #2563EB)',
+    tintLight: '#eff6ff',
+    tintDark: '#1e3a8a1a',
+    tab: 'text-indigo-600 dark:text-indigo-400',
+  },
 };
 
 export default function AddEntrySheet() {
@@ -48,6 +72,8 @@ export default function AddEntrySheet() {
 
   const noteRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const cfg = TYPE_CONFIG[type];
 
   // Update evaluated amount when expression changes
   const handleEvaluate = () => {
@@ -162,40 +188,56 @@ export default function AddEntrySheet() {
           <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
 
-        <div className="px-4 pb-8 space-y-5">
-
-          {/* ── Type Selector ────────────────────────────────────────────── */}
-          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+        {/* ── Mood Header (changes color by type) ────────────────────── */}
+        <div
+          className="mx-4 mt-2 mb-3 rounded-2xl px-4 pt-4 pb-3 transition-all duration-300"
+          style={{ background: cfg.tintLight }}
+        >
+          {/* Type Selector */}
+          <div className="flex gap-2 bg-white/60 rounded-xl p-1 mb-3">
             {(Object.keys(TYPE_CONFIG) as TransactionType[]).map((t) => (
               <button
                 key={t}
                 id={`type-tab-${t}`}
                 onClick={() => setType(t)}
-                className={`type-tab ${
-                  type === t
-                    ? `${TYPE_CONFIG[t].color} text-white shadow-sm`
-                    : 'type-tab-inactive'
+                className={`type-tab transition-all duration-200 ${
+                  type === t ? 'text-white shadow-md' : 'type-tab-inactive'
                 }`}
+                style={type === t ? { background: TYPE_CONFIG[t].gradient } : {}}
               >
                 {TYPE_CONFIG[t].label}
               </button>
             ))}
           </div>
 
-          {/* ── Amount Display ───────────────────────────────────────────── */}
-          <div className="text-center py-2">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1 font-mono min-h-4">
+          {/* Amount Display */}
+          <div className="text-center py-1">
+            <p className="text-xs text-slate-400 mb-1 font-mono min-h-4">
               {expression || ''}
             </p>
-            <p id="amount-display" className="amount-display">
+            <p
+              id="amount-display"
+              className="text-5xl font-bold tracking-tight text-center text-slate-900"
+              style={{ fontFeatureSettings: "'tnum'" }}
+            >
               ₱ {liveAmount > 0
                 ? (liveAmount / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 : evaluatedAmount > 0
                 ? (evaluatedAmount / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 : '0'}
             </p>
-          </div>
 
+            {/* Type indicator bar */}
+            <div className="mt-2 flex justify-center">
+              <div
+                className="h-1 w-16 rounded-full transition-all duration-300"
+                style={{ background: cfg.gradient }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 pb-8 space-y-5">
           {/* ── NumPad ──────────────────────────────────────────────────── */}
           <NumPad
             expression={expression}
@@ -231,7 +273,7 @@ export default function AddEntrySheet() {
             {type === 'transfer' && (
               <div className="mt-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <i className="fa-solid fa-right-left text-blue-500 text-xs" />
+                  <i className="fa-solid fa-right-left text-indigo-500 text-xs" />
                   <p className="section-label mb-0">To Account</p>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -314,7 +356,7 @@ export default function AddEntrySheet() {
               </button>
 
               <div className="flex items-center gap-2">
-                <i className="fa-solid fa-calendar text-blue-500 text-sm" />
+                <i className="fa-solid fa-calendar text-indigo-500 text-sm" />
                 <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                   {format(date, 'EEE, MMM d, yyyy')}
                 </span>
@@ -336,9 +378,10 @@ export default function AddEntrySheet() {
             id="save-entry-btn"
             onClick={handleSave}
             disabled={!isValid}
-            className="btn-primary"
+            className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-98 shadow-lg"
+            style={{ background: isValid ? cfg.gradient : undefined, backgroundColor: !isValid ? '#94A3B8' : undefined }}
           >
-            {editingTxn ? 'Update Entry' : 'Save Entry'}
+            {editingTxn ? 'Update Entry' : `Save ${cfg.label}`}
           </button>
 
           {/* ── Delete (edit mode only) ───────────────────────────────────── */}

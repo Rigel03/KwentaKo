@@ -18,12 +18,29 @@
   --expense: #EF4444;
   --transfer: #2563EB;
 
+  --hero-from: #4F46E5;
+  --hero-mid:  #7C3AED;
+  --hero-to:   #2563EB;
+
   --nav-height: 64px;
   --sheet-max-height: 92vh;
   --radius: 16px;
   --radius-sm: 10px;
   --transition: 150ms ease;
 }
+
+/* ─── AMOLED theme override ──────────────────────────────────────────────── */
+.amoled {
+  --tw-bg-opacity: 1;
+  background-color: #000000;
+  color-scheme: dark;
+}
+.amoled .bottom-nav  { background-color: #000 !important; }
+.amoled .card        { background-color: #0a0a0a !important; border-color: #1a1a1a !important; }
+.amoled .card-sm     { background-color: #0a0a0a !important; border-color: #1a1a1a !important; }
+.amoled .sheet-panel { background-color: #000 !important; }
+.amoled .bg-white, .amoled .bg-slate-900  { background-color: #000 !important; }
+.amoled .bg-slate-50, .amoled .bg-slate-950 { background-color: #000 !important; }
 
 /* ─── Base ────────────────────────────────────────────────────────────────── */
 *, *::before, *::after {
@@ -33,6 +50,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -40,11 +58,6 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-}
-
-/* Prevent layout shift from scrollbar */
-html {
-  scrollbar-gutter: stable;
 }
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
@@ -68,9 +81,42 @@ html {
 .nav-item {
   @apply flex flex-col items-center justify-center gap-0.5;
   @apply text-xs font-medium;
-  @apply transition-all duration-150;
+  @apply transition-all duration-200;
   @apply w-16 h-14;
   @apply rounded-xl;
+  @apply relative;
+}
+
+/* Active pill indicator that slides under nav items */
+.nav-active-pill {
+  @apply absolute top-1 inset-x-1 h-1 rounded-full;
+  background: linear-gradient(90deg, #4F46E5, #2563EB);
+  box-shadow: 0 0 8px rgba(79, 70, 229, 0.6);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Hero Gradient ──────────────────────────────────────────────────────── */
+.hero-gradient {
+  background: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-mid) 50%, var(--hero-to) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ─── Glassmorphism Net-Worth Card ───────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
 }
 
 /* ─── Cards ──────────────────────────────────────────────────────────────── */
@@ -84,6 +130,38 @@ html {
   @apply rounded-xl p-3;
   @apply border border-slate-200 dark:border-slate-700;
   @apply bg-white dark:bg-slate-800;
+}
+
+/* ─── Credit Card ────────────────────────────────────────────────────────── */
+.credit-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 130px;
+}
+
+.credit-card::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  pointer-events: none;
+}
+
+.credit-card-inner::before {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  right: 20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  pointer-events: none;
 }
 
 /* ─── Buttons ─────────────────────────────────────────────────────────────── */
@@ -113,19 +191,22 @@ html {
 /* ─── Type Tabs ──────────────────────────────────────────────────────────── */
 .type-tab {
   @apply flex-1 py-2.5 rounded-xl text-sm font-semibold;
-  @apply transition-all duration-150;
+  @apply transition-all duration-200;
 }
 
 .type-tab-income {
-  @apply bg-green-500 text-white;
+  background: linear-gradient(135deg, #16A34A, #15803D);
+  @apply text-white shadow-md;
 }
 
 .type-tab-expense {
-  @apply bg-red-500 text-white;
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  @apply text-white shadow-md;
 }
 
 .type-tab-transfer {
-  @apply bg-blue-500 text-white;
+  background: linear-gradient(135deg, #2563EB, #4F46E5);
+  @apply text-white shadow-md;
 }
 
 .type-tab-inactive {
@@ -186,6 +267,8 @@ html {
 .cat-tile-selected {
   @apply border-blue-600 bg-blue-50 dark:bg-blue-900/40;
   @apply text-blue-700 dark:text-blue-300;
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
 /* ─── Transaction Row ────────────────────────────────────────────────────── */
@@ -193,21 +276,56 @@ html {
   @apply flex items-center gap-3 py-3 px-4;
   @apply border-b border-slate-100 dark:border-slate-700/50;
   @apply last:border-b-0;
-  @apply transition-colors duration-150;
+  @apply transition-all duration-150;
   @apply hover:bg-slate-50 dark:hover:bg-slate-800/50;
   @apply cursor-pointer;
+  position: relative;
+}
+
+/* Left accent bar */
+.txn-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--txn-accent, transparent);
+  transition: opacity 0.15s ease;
+}
+
+.txn-row:hover {
+  padding-left: 18px;
 }
 
 /* ─── Toast ──────────────────────────────────────────────────────────────── */
 .toast {
   @apply flex items-center gap-3 px-4 py-3 rounded-2xl;
-  @apply shadow-lg text-sm font-medium;
+  @apply shadow-2xl text-sm font-medium;
   @apply animate-slide-up;
+  position: relative;
+  overflow: hidden;
+  min-width: 240px;
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 0 0 16px 16px;
+  animation: toast-drain 3s linear forwards;
+}
+
+@keyframes toast-drain {
+  from { width: 100%; }
+  to   { width: 0%; }
 }
 
 /* ─── Bottom Sheet ───────────────────────────────────────────────────────── */
 .sheet-overlay {
-  @apply fixed inset-0 z-50 bg-black/40 backdrop-blur-sm;
+  @apply fixed inset-0 z-50 bg-black/50 backdrop-blur-sm;
   @apply transition-opacity duration-200;
 }
 
@@ -219,6 +337,11 @@ html {
   max-height: var(--sheet-max-height);
 }
 
+/* Sheet type mood tint */
+.sheet-income  { --sheet-accent: #dcfce7; --sheet-accent-dark: #14532d22; }
+.sheet-expense { --sheet-accent: #fee2e2; --sheet-accent-dark: #7f1d1d22; }
+.sheet-transfer{ --sheet-accent: #dbeafe; --sheet-accent-dark: #1e3a8a22; }
+
 /* ─── Period Toggle ──────────────────────────────────────────────────────── */
 .period-btn {
   @apply px-3 py-1.5 rounded-xl text-xs font-semibold;
@@ -226,7 +349,8 @@ html {
 }
 
 .period-btn-active {
-  @apply bg-blue-600 text-white;
+  background: linear-gradient(135deg, #4F46E5, #2563EB);
+  @apply text-white shadow-sm;
 }
 
 .period-btn-inactive {
@@ -253,6 +377,30 @@ html {
   @apply mb-2;
 }
 
+/* ─── Spending Ratio Bar ─────────────────────────────────────────────────── */
+.spending-bar-track {
+  @apply w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700;
+  overflow: hidden;
+}
+
+.spending-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Date Group Header ──────────────────────────────────────────────────── */
+.date-group-header {
+  @apply sticky top-0 z-10;
+  @apply flex items-center justify-between;
+  @apply px-1 py-2;
+  background: linear-gradient(to bottom, rgba(248,250,252,1) 80%, rgba(248,250,252,0));
+}
+
+.dark .date-group-header {
+  background: linear-gradient(to bottom, rgba(2,6,23,1) 80%, rgba(2,6,23,0));
+}
+
 /* ─── Animations ─────────────────────────────────────────────────────────── */
 @keyframes slide-up {
   from { transform: translateY(100%); opacity: 0; }
@@ -274,10 +422,43 @@ html {
   to   { transform: scale(1); opacity: 1; }
 }
 
-.animate-slide-up  { animation: slide-up 0.2s ease-out; }
-.animate-slide-down { animation: slide-down 0.2s ease-out; }
-.animate-fade-in   { animation: fade-in 0.2s ease-out; }
-.animate-scale-in  { animation: scale-in 0.15s ease-out; }
+/* FAB breathing glow pulse */
+@keyframes fab-breathe {
+  0%, 100% { box-shadow: 0 4px 20px rgba(79, 70, 229, 0.5), 0 0 0 0 rgba(79, 70, 229, 0.3); }
+  50%       { box-shadow: 0 8px 30px rgba(79, 70, 229, 0.7), 0 0 0 8px rgba(79, 70, 229, 0); }
+}
+
+/* Shimmer for skeleton / amount change */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Count-up bounce */
+@keyframes count-bounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* Progress bar fill in */
+@keyframes bar-grow {
+  from { width: 0; }
+}
+
+/* Ring pulse for notification dot */
+@keyframes ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.3); opacity: 0.6; }
+}
+
+.animate-slide-up     { animation: slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+.animate-slide-down   { animation: slide-down 0.2s ease-out; }
+.animate-fade-in      { animation: fade-in 0.2s ease-out; }
+.animate-scale-in     { animation: scale-in 0.15s ease-out; }
+.animate-count-bounce { animation: count-bounce 0.3s ease-out; }
+.animate-bar-grow     { animation: bar-grow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-ring-pulse   { animation: ring-pulse 2s ease-in-out infinite; }
 
 /* ─── Scrollbar Styling ──────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -286,15 +467,25 @@ html {
   @apply bg-slate-300 dark:bg-slate-600;
   border-radius: 999px;
 }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ─── FAB ────────────────────────────────────────────────────────────────── */
 .fab {
   @apply w-14 h-14 rounded-full;
-  @apply bg-blue-600 text-white;
+  background: linear-gradient(135deg, #4F46E5, #2563EB);
+  @apply text-white;
   @apply flex items-center justify-center;
-  @apply shadow-lg shadow-blue-600/30;
-  @apply transition-all duration-150;
-  @apply active:scale-95 hover:bg-blue-700;
+  animation: fab-breathe 2.8s ease-in-out infinite;
+  @apply transition-all duration-200;
+  @apply active:scale-95;
+}
+
+.fab:hover {
+  animation: none;
+  background: linear-gradient(135deg, #4338CA, #1D4ED8);
+  box-shadow: 0 8px 30px rgba(79, 70, 229, 0.6);
+  transform: scale(1.05);
 }
 
 /* ─── Badge ──────────────────────────────────────────────────────────────── */
@@ -306,6 +497,19 @@ html {
 .net-worth-amount {
   @apply text-4xl font-bold tracking-tight;
   font-feature-settings: 'tnum';
+}
+
+/* ─── Progress Ring ──────────────────────────────────────────────────────── */
+.stat-progress-bar {
+  @apply h-1.5 rounded-full mt-3;
+  background: rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.stat-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  animation: bar-grow 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* ─── Safe Area Support (iOS PWA) ────────────────────────────────────────── */

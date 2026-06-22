@@ -1,6 +1,6 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line,
+  PieChart, Pie, Cell, AreaChart, Area,
 } from 'recharts';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
@@ -21,8 +21,6 @@ const PERIOD_OPTIONS: { id: AnalyticsPeriod; label: string }[] = [
   { id: 'year',  label: 'This Year' },
 ];
 
-
-
 function getInterval(period: AnalyticsPeriod) {
   const now = new Date();
   if (period === 'week')  return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
@@ -34,11 +32,11 @@ interface ChartTooltipProps { active?: boolean; payload?: { value: number; name:
 function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-lg text-xs">
-      <p className="font-bold text-slate-700 dark:text-slate-200 mb-1">{label}</p>
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 shadow-xl text-xs">
+      <p className="font-bold text-slate-700 dark:text-slate-200 mb-2">{label}</p>
       {payload.map((p) => (
-        <p key={p.name} className={p.name === 'income' ? 'text-green-600' : p.name === 'expense' ? 'text-red-500' : 'text-blue-600'}>
-          {p.name}: ₱{p.value.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+        <p key={p.name} className={`font-semibold ${p.name === 'income' ? 'text-green-600' : p.name === 'expense' ? 'text-red-500' : 'text-indigo-600'}`}>
+          {p.name.charAt(0).toUpperCase() + p.name.slice(1)}: ₱{p.value.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
         </p>
       ))}
     </div>
@@ -47,6 +45,7 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
 
 export default function Analytics() {
   const [period, setPeriod] = useState<AnalyticsPeriod>('month');
+  const [activeDonutIndex, setActiveDonutIndex] = useState<number | null>(null);
   const transactions = useStore((s) => s.transactions);
   const categories   = useStore((s) => s.categories);
 
@@ -106,12 +105,17 @@ export default function Analytics() {
         name: cat?.name ?? 'Other',
         color: cat?.color ?? '#94A3B8',
         value: item.total / 100,
+        rawTotal: item.total,
         percentage: item.percentage,
       };
     });
   }, [periodTxns, categories]);
 
-  // ── 30-day Balance Trend (all accounts net)
+  const activeCat = activeDonutIndex !== null ? catData[activeDonutIndex] : null;
+  const donutCenterValue = activeCat ? activeCat.rawTotal : totalExpense;
+  const donutCenterName  = activeCat ? activeCat.name : 'Spending';
+
+  // ── 30-day Balance Trend (area chart)
   const trendData = useMemo(() => {
     return Array.from({ length: 30 }, (_, i) => {
       const day = subDays(new Date(), 29 - i);
@@ -140,6 +144,8 @@ export default function Analytics() {
   const lastMonthExp  = getPeriodSummary(lastMonthTxns).totalExpense;
   const momChange     = lastMonthExp > 0 ? ((thisMonthExp - lastMonthExp) / lastMonthExp) * 100 : 0;
 
+  const isPositiveTrend = trendData[trendData.length - 1]?.balance >= 0;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-8">
       {/* Header */}
@@ -153,11 +159,12 @@ export default function Analytics() {
               key={opt.id}
               id={`analytics-period-${opt.id}`}
               onClick={() => setPeriod(opt.id)}
-              className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
                 period === opt.id
-                  ? 'bg-blue-600 text-white'
+                  ? 'text-white shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
+              style={period === opt.id ? { background: 'linear-gradient(135deg, #4F46E5, #2563EB)' } : {}}
             >
               {opt.label}
             </button>
@@ -168,8 +175,8 @@ export default function Analytics() {
       <div className="px-4 py-4 space-y-5">
         {/* Summary Cards */}
         <div className="flex gap-3">
-          <StatCard label="Income"   amount={formatPHP(totalIncome)}  icon="fa-arrow-down"  variant="income"  />
-          <StatCard label="Expense"  amount={formatPHP(totalExpense)} icon="fa-arrow-up"    variant="expense" />
+          <StatCard label="Income"  amount={formatPHP(totalIncome)}  icon="fa-arrow-down"  variant="income"  />
+          <StatCard label="Expense" amount={formatPHP(totalExpense)} icon="fa-arrow-up"    variant="expense" />
         </div>
         <StatCard
           label="Net Cash Flow"
@@ -202,20 +209,30 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Income vs Expense Bar Chart */}
+        {/* Income vs Expense Bar Chart — gradient bars */}
         <div className="card">
           <p className="section-label mb-3">Income vs Expenses</p>
           {barData.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-6">No data for this period</p>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={barData} barGap={2}>
+              <BarChart data={barData} barGap={3}>
+                <defs>
+                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22C55E" />
+                    <stop offset="100%" stopColor="#15803D" />
+                  </linearGradient>
+                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F87171" />
+                    <stop offset="100%" stopColor="#DC2626" />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
                 <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="income"  fill="#16A34A" radius={[4,4,0,0]} name="income" />
-                <Bar dataKey="expense" fill="#EF4444" radius={[4,4,0,0]} name="expense" />
+                <Bar dataKey="income"  fill="url(#incomeGrad)"  radius={[6,6,0,0]} name="income" />
+                <Bar dataKey="expense" fill="url(#expenseGrad)" radius={[6,6,0,0]} name="expense" />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -225,36 +242,66 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Spending by Category Donut */}
+        {/* Spending by Category Donut — with interactive center label */}
         <div className="card">
           <p className="section-label mb-3">Spending by Category</p>
           {catData.length === 0 ? (
             <EmptyState icon="fa-chart-pie" title="No Expense Data" description="Add some expenses to see your spending breakdown." />
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={catData} cx="50%" cy="50%"
-                    innerRadius={50} outerRadius={80}
-                    dataKey="value" paddingAngle={3}
-                  >
-                    {catData.map((entry, idx) => (
-                      <Cell key={idx} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(v: unknown) => [`₱${Number(v).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, '' as string] as [string, string]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={catData} cx="50%" cy="50%"
+                      innerRadius={58} outerRadius={88}
+                      dataKey="value" paddingAngle={3}
+                      onMouseEnter={(_, idx) => setActiveDonutIndex(idx)}
+                      onMouseLeave={() => setActiveDonutIndex(null)}
+                    >
+                      {catData.map((entry, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={entry.color}
+                          opacity={activeDonutIndex === null || activeDonutIndex === idx ? 1 : 0.45}
+                          stroke="none"
+                        />
+                      ))}
+                    </Pie>
+                    {/* Custom center label via recharts label prop workaround */}
+                    <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" fill="#94A3B8" fontSize={10} fontWeight={600}>
+                      {donutCenterName}
+                    </text>
+                    <text x="50%" y="56%" textAnchor="middle" dominantBaseline="middle" fill="#0F172A" fontSize={12} fontWeight={700}>
+                      {donutCenterValue > 0 ? `₱${(donutCenterValue / 100).toLocaleString('en-PH', { maximumFractionDigits: 0 })}` : '—'}
+                    </text>
+                    <Tooltip
+                      formatter={(v: unknown) => [`₱${Number(v).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, '' as string] as [string, string]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-2.5 mt-1">
                 {catData.map((cat, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-2 transition-opacity duration-150 ${
+                      activeDonutIndex !== null && activeDonutIndex !== idx ? 'opacity-40' : 'opacity-100'
+                    }`}
+                    onMouseEnter={() => setActiveDonutIndex(idx)}
+                    onMouseLeave={() => setActiveDonutIndex(null)}
+                  >
                     <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
                     <span className="text-xs text-slate-600 dark:text-slate-300 flex-1 truncate">{cat.name}</span>
-                    <span className="text-xs text-slate-400">{cat.percentage.toFixed(1)}%</span>
-                    <span className="text-xs font-semibold font-mono text-slate-700 dark:text-slate-200">
+                    {/* Mini progress bar per category */}
+                    <div className="w-16 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
+                      />
+                    </div>
+                    <span className="text-xs text-slate-400 w-9 text-right">{cat.percentage.toFixed(0)}%</span>
+                    <span className="text-xs font-semibold font-mono text-slate-700 dark:text-slate-200 w-16 text-right">
                       {formatCompact(cat.value * 100)}
                     </span>
                   </div>
@@ -264,19 +311,33 @@ export default function Analytics() {
           )}
         </div>
 
-        {/* 30-Day Balance Trend */}
+        {/* 30-Day Balance Trend — Area Chart */}
         <div className="card">
           <p className="section-label mb-3">30-Day Net Worth Trend</p>
-          <ResponsiveContainer width="100%" height={150}>
-            <LineChart data={trendData}>
+          <ResponsiveContainer width="100%" height={160}>
+            <AreaChart data={trendData}>
+              <defs>
+                <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={isPositiveTrend ? '#4F46E5' : '#EF4444'} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={isPositiveTrend ? '#4F46E5' : '#EF4444'} stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
               <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#94A3B8' }} axisLine={false} tickLine={false}
                 interval={Math.floor(trendData.length / 5)} />
               <YAxis tick={{ fontSize: 9, fill: '#94A3B8' }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
               <Tooltip formatter={(v: unknown) => [`₱${Number(v).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, 'Balance'] as [string, string]} />
-              <Line type="monotone" dataKey="balance" stroke="#2563EB" strokeWidth={2} dot={false} />
-            </LineChart>
+              <Area
+                type="monotone"
+                dataKey="balance"
+                stroke={isPositiveTrend ? '#4F46E5' : '#EF4444'}
+                strokeWidth={2.5}
+                fill="url(#balanceGrad)"
+                dot={false}
+                activeDot={{ r: 5, fill: isPositiveTrend ? '#4F46E5' : '#EF4444', stroke: '#fff', strokeWidth: 2 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
