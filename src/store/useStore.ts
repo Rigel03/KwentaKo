@@ -101,7 +101,7 @@ export const useStore = create<KwentaKoStore>()(
           color: account.color,
           is_active: account.isActive,
           created_at: account.createdAt,
-        }).then(({ error }) => error && console.error(error));
+        }).then(({ error }: any) => error && console.error(error));
       },
 
       updateAccount: (id, updates) => {
@@ -114,14 +114,14 @@ export const useStore = create<KwentaKoStore>()(
         const payload: any = { ...updates };
         if ('isActive' in payload) { payload.is_active = payload.isActive; delete payload.isActive; }
         if ('createdAt' in payload) { payload.created_at = payload.createdAt; delete payload.createdAt; }
-        supabase.from('accounts').update(payload).eq('client_id', id).then(({ error }) => error && console.error(error));
+        supabase.from('accounts').update(payload).eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
       deleteAccount: (id) => {
         set((s) => ({
           accounts: s.accounts.filter((a) => a.id !== id),
         }));
-        supabase.from('accounts').delete().eq('client_id', id).then(({ error }) => error && console.error(error));
+        supabase.from('accounts').delete().eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
       // ── Transaction Actions
@@ -141,7 +141,7 @@ export const useStore = create<KwentaKoStore>()(
           transfer_group_id: transaction.transferGroupId,
           created_at: transaction.createdAt,
           updated_at: transaction.updatedAt,
-        }).then(({ error }) => error && console.error(error));
+        }).then(({ error }: any) => error && console.error(error));
       },
 
       addTransactions: (transactions) => {
@@ -154,7 +154,7 @@ export const useStore = create<KwentaKoStore>()(
           date: t.date, transfer_group_id: t.transferGroupId, created_at: t.createdAt,
           updated_at: t.updatedAt,
         }));
-        supabase.from('transactions').insert(payload).then(({ error }) => error && console.error(error));
+        supabase.from('transactions').insert(payload).then(({ error }: any) => error && console.error(error));
       },
 
       updateTransaction: (id, updates) => {
@@ -171,14 +171,14 @@ export const useStore = create<KwentaKoStore>()(
         if ('categoryId' in payload) { payload.category_id = payload.categoryId; delete payload.categoryId; }
         if ('transferGroupId' in payload) { payload.transfer_group_id = payload.transferGroupId; delete payload.transferGroupId; }
         if ('createdAt' in payload) { payload.created_at = payload.createdAt; delete payload.createdAt; }
-        supabase.from('transactions').update(payload).eq('client_id', id).then(({ error }) => error && console.error(error));
+        supabase.from('transactions').update(payload).eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
       deleteTransaction: (id) => {
         set((s) => ({
           transactions: s.transactions.filter((t) => t.id !== id),
         }));
-        supabase.from('transactions').delete().eq('client_id', id).then(({ error }) => error && console.error(error));
+        supabase.from('transactions').delete().eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
       deleteTransactionPair: (transferGroupId) => {
@@ -187,7 +187,7 @@ export const useStore = create<KwentaKoStore>()(
             (t) => t.transferGroupId !== transferGroupId,
           ),
         }));
-        supabase.from('transactions').delete().eq('transfer_group_id', transferGroupId).then(({ error }) => error && console.error(error));
+        supabase.from('transactions').delete().eq('transfer_group_id', transferGroupId).then(({ error }: any) => error && console.error(error));
       },
 
       // ── Category Actions
@@ -197,7 +197,7 @@ export const useStore = create<KwentaKoStore>()(
           client_id: category.id, name: category.name, icon: category.icon,
           color: category.color, type: category.type, is_default: category.isDefault,
           is_active: category.isActive, sort_order: category.sortOrder,
-        }).then(({ error }) => error && console.error(error));
+        }).then(({ error }: any) => error && console.error(error));
       },
 
       updateCategory: (id, updates) => {
@@ -210,14 +210,14 @@ export const useStore = create<KwentaKoStore>()(
         if ('isDefault' in payload) { payload.is_default = payload.isDefault; delete payload.isDefault; }
         if ('isActive' in payload) { payload.is_active = payload.isActive; delete payload.isActive; }
         if ('sortOrder' in payload) { payload.sort_order = payload.sortOrder; delete payload.sortOrder; }
-        supabase.from('categories').update(payload).eq('client_id', id).then(({ error }) => error && console.error(error));
+        supabase.from('categories').update(payload).eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
       deleteCategory: (id) => {
         set((s) => ({
           categories: s.categories.filter((c) => c.id !== id),
         }));
-        supabase.from('categories').delete().eq('client_id', id).then(({ error }) => error && console.error(error));
+        supabase.from('categories').delete().eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
       reorderCategory: (sourceIndex, destinationIndex) => {
@@ -234,7 +234,7 @@ export const useStore = create<KwentaKoStore>()(
           const updatedCats = cats.map((c, i) => ({ ...c, sortOrder: i + 1 }));
           
           updatedCats.forEach(c => {
-             supabase.from('categories').update({ sort_order: c.sortOrder }).eq('client_id', c.id).then(({ error }) => error && console.error(error));
+             supabase.from('categories').update({ sort_order: c.sortOrder }).eq('client_id', c.id).then(({ error }: any) => error && console.error(error));
           });
           
           return { categories: updatedCats };
@@ -247,7 +247,7 @@ export const useStore = create<KwentaKoStore>()(
           const newSettings = { ...s.settings, ...updates };
           
           // Sync profile to Supabase
-          supabase.auth.getUser().then(({ data }) => {
+          supabase.auth.getUser().then(({ data }: any) => {
             if (data.user) {
               const payload: any = {};
               if ('userName' in updates) payload.user_name = updates.userName;
@@ -258,7 +258,7 @@ export const useStore = create<KwentaKoStore>()(
               if ('hasSeededData' in updates) payload.has_seeded_data = updates.hasSeededData;
               
               if (Object.keys(payload).length > 0) {
-                supabase.from('profiles').update(payload).eq('id', data.user.id).then(({ error }) => error && console.error(error));
+                supabase.from('profiles').update(payload).eq('id', data.user.id).then(({ error }: any) => error && console.error(error));
               }
             }
           });
@@ -269,8 +269,8 @@ export const useStore = create<KwentaKoStore>()(
 
       setTheme: (theme) => {
         set((s) => ({ settings: { ...s.settings, theme } }));
-        supabase.auth.getUser().then(({ data }) => {
-          if (data.user) supabase.from('profiles').update({ theme }).eq('id', data.user.id).then(({ error }) => error && console.error(error));
+        supabase.auth.getUser().then(({ data }: any) => {
+          if (data.user) supabase.from('profiles').update({ theme }).eq('id', data.user.id).then(({ error }: any) => error && console.error(error));
         });
       },
 

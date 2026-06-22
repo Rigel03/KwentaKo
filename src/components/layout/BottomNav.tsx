@@ -1,4 +1,3 @@
-import React from 'react';
 import { useStore } from '../../store/useStore';
 
 type Page = 'dashboard' | 'transactions' | 'accounts' | 'analytics' | 'settings';
@@ -18,8 +17,6 @@ const NAV_ITEMS = [
 
 // Visual order without the FAB placeholder slot
 // Indices: 0=Home, 1=History, [FAB], 2=Accounts, 3=Analytics, 4=Settings
-const LEFT_ITEMS  = [NAV_ITEMS[0], NAV_ITEMS[1]];
-const RIGHT_ITEMS = [NAV_ITEMS[2], NAV_ITEMS[3], NAV_ITEMS[4]];
 
 export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   const openAddSheet = useStore((s) => s.openAddSheet);

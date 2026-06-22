@@ -448,7 +448,7 @@ export default function Categories() {
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="categories-list">
-              {(provided) => (
+              {(provided: any) => (
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
@@ -461,7 +461,7 @@ export default function Categories() {
                       index={index}
                       isDragDisabled={filterType !== 'all'}
                     >
-                      {(provided, snapshot) => (
+                      {(provided: any, snapshot: any) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { format, parseISO, subDays, addDays, isAfter, startOfDay } from 'date-fns';
+import { format, parseISO, addDays, isAfter, startOfDay } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { evaluateExpression } from '../../utils/currency';
 import NumPad from './NumPad';
@@ -129,9 +129,6 @@ export default function AddEntrySheet() {
 
   // ── Date navigation
   const today = startOfDay(new Date());
-  const canGoForward = !isAfter(startOfDay(addDays(date, 1)), today);
-  const goBack    = () => setDate((d) => subDays(d, 1));
-  const goForward = () => { if (canGoForward) setDate((d) => addDays(d, 1)); };
 
   // ── Save
   const handleSave = () => {
@@ -438,15 +435,13 @@ export default function AddEntrySheet() {
         onCancel={() => setShowTransferDeleteConfirm(false)}
       />
 
-      <DateTimePicker
-        isOpen={showDatePicker}
-        initialDate={date}
-        onConfirm={(d) => {
-          setDate(d);
-          setShowDatePicker(false);
-        }}
-        onCancel={() => setShowDatePicker(false)}
-      />
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          onChange={(d) => setDate(d)}
+          onClose={() => setShowDatePicker(false)}
+        />
+      )}
     </>
   );
 }
