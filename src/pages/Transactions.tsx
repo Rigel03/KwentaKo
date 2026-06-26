@@ -7,18 +7,18 @@ import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
 import type { TransactionType, Transaction } from '../types';
 
-const TYPE_OPTIONS: { id: TransactionType | 'all'; label: string; gradient: string }[] = [
-  { id: 'all',      label: 'All',      gradient: 'linear-gradient(135deg, #4F46E5, #2563EB)' },
-  { id: 'income',   label: 'Income',   gradient: 'linear-gradient(135deg, #16A34A, #22C55E)' },
-  { id: 'expense',  label: 'Expense',  gradient: 'linear-gradient(135deg, #DC2626, #EF4444)' },
-  { id: 'transfer', label: 'Transfer', gradient: 'linear-gradient(135deg, #4F46E5, #7C3AED)' },
+const TYPE_FILTERS: { id: TransactionType | 'all'; label: string; icon: string }[] = [
+  { id: 'all',      label: 'All',      icon: 'fa-list' },
+  { id: 'income',   label: 'Income',   icon: 'fa-arrow-down' },
+  { id: 'expense',  label: 'Expense',  icon: 'fa-arrow-up' },
+  { id: 'transfer', label: 'Transfer', icon: 'fa-right-left' },
 ];
 
 function dateHeader(dateStr: string): string {
   const d = parseISO(dateStr);
-  if (isToday(d)) return 'Today';
+  if (isToday(d))     return 'Today';
   if (isYesterday(d)) return 'Yesterday';
-  return format(d, 'EEEE, MMMM d, yyyy');
+  return format(d, 'EEEE, MMM d');
 }
 
 export default function Transactions() {
@@ -41,7 +41,6 @@ export default function Transactions() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [transactions, typeFilter, search]);
 
-  // Group by date
   const grouped = useMemo(() => {
     const groups = new Map<string, Transaction[]>();
     for (const t of filtered) {
@@ -53,16 +52,33 @@ export default function Transactions() {
   }, [filtered]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-          Transactions
-        </h1>
+    <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)' }}>
 
-        {/* Search */}
-        <div className="relative mb-3">
-          <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+      {/* ── Sticky Header ────────────────────────────────────────────── */}
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+          backgroundColor: 'var(--nav-bg)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid var(--nav-border)',
+          padding: '16px 20px 12px',
+        }}
+      >
+        <p className="page-title" style={{ marginBottom: 12 }}>History</p>
+
+        {/* Search bar */}
+        <div style={{ position: 'relative', marginBottom: 10 }}>
+          <i
+            className="fa-solid fa-magnifying-glass"
+            style={{
+              position: 'absolute', left: 14, top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-3)', fontSize: 13,
+            }}
+          />
           <input
             id="search-transactions"
             type="search"
@@ -70,87 +86,119 @@ export default function Transactions() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input-field"
-            style={{ paddingLeft: '2.25rem' }}
+            style={{ paddingLeft: '2.5rem', paddingRight: '1rem' }}
           />
         </div>
 
-        {/* Type Filter — colored gradient pills */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {TYPE_OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              id={`filter-${opt.id}`}
-              onClick={() => setTypeFilter(opt.id)}
-              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
-                typeFilter === opt.id
-                  ? 'text-white shadow-md scale-105'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
-              style={typeFilter === opt.id ? { background: opt.gradient } : {}}
-            >
-              {opt.label}
-            </button>
-          ))}
+        {/* Type filter tabs */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          {TYPE_FILTERS.map((opt) => {
+            const active = typeFilter === opt.id;
+            const dotColor =
+              opt.id === 'income'   ? 'var(--income)'   :
+              opt.id === 'expense'  ? 'var(--expense)'  :
+              opt.id === 'transfer' ? 'var(--transfer)' : 'var(--text-1)';
+            return (
+              <button
+                key={opt.id}
+                id={`filter-${opt.id}`}
+                onClick={() => setTypeFilter(opt.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '6px 14px',
+                  borderRadius: 99,
+                  border: active ? 'none' : '1.5px solid var(--divider)',
+                  backgroundColor: active ? 'var(--text-1)' : 'transparent',
+                  color: active ? 'var(--bg)' : 'var(--text-3)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 200ms ease',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {!active && opt.id !== 'all' && (
+                  <span style={{
+                    width: 7, height: 7,
+                    borderRadius: '50%',
+                    backgroundColor: dotColor,
+                    flexShrink: 0,
+                  }} />
+                )}
+                {opt.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Transaction List */}
-      <div className="px-4 py-4 space-y-5">
+      {/* ── Transaction List ──────────────────────────────────────────── */}
+      <div style={{ padding: '16px 20px 32px' }}>
         {grouped.length === 0 ? (
-          <EmptyState
-            icon="fa-receipt"
-            title={search ? 'No Results' : 'No Transactions Yet'}
-            description={
-              search
-                ? `No transactions matching "${search}"`
-                : 'Start by adding your first income or expense entry.'
-            }
-            actionLabel={!search ? 'Add Entry' : undefined}
-            onAction={!search ? () => openAddSheet() : undefined}
-          />
+          <div style={{ marginTop: 40 }}>
+            <EmptyState
+              icon="fa-receipt"
+              title={search ? 'No Results' : 'No Transactions Yet'}
+              description={
+                search
+                  ? `Nothing found for "${search}"`
+                  : 'Tap the + button to log your first entry.'
+              }
+              actionLabel={!search ? 'Add Entry' : undefined}
+              onAction={!search ? () => openAddSheet() : undefined}
+            />
+          </div>
         ) : (
-          grouped.map(([dateKey, txns]) => {
-            // Daily net: income minus expense (transfers excluded)
-            const { totalIncome, totalExpense } = getPeriodSummary(txns);
-            const dailyNet = totalIncome - totalExpense;
-            const hasNetActivity = totalIncome > 0 || totalExpense > 0;
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {grouped.map(([dateKey, txns]) => {
+              const { totalIncome, totalExpense } = getPeriodSummary(txns);
+              const dailyNet = totalIncome - totalExpense;
+              const hasNet = totalIncome > 0 || totalExpense > 0;
 
-            return (
-              <div key={dateKey}>
-                {/* Sticky Date Group Header */}
-                <div className="date-group-header mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
-                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                      {dateHeader(txns[0].date)}
-                    </p>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">
-                      · {txns.length} item{txns.length !== 1 ? 's' : ''}
-                    </span>
+              return (
+                <div key={dateKey}>
+                  {/* Date group header */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 8,
+                      padding: '0 4px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {dateHeader(txns[0].date)}
+                      </p>
+                      <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
+                        · {txns.length} item{txns.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    {hasNet && (
+                      <span style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: dailyNet >= 0 ? 'var(--income)' : 'var(--expense)',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}>
+                        {dailyNet >= 0 ? '+' : ''}{formatPHP(dailyNet)}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Daily net total */}
-                  {hasNetActivity && (
-                    <span
-                      className={`text-xs font-bold font-mono px-2 py-0.5 rounded-full ${
-                        dailyNet >= 0
-                          ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30'
-                          : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30'
-                      }`}
-                    >
-                      {dailyNet >= 0 ? '+' : ''}{formatPHP(dailyNet)}
-                    </span>
-                  )}
+                  {/* Card */}
+                  <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    {txns.map((txn) => (
+                      <TransactionRow key={txn.id} transaction={txn} />
+                    ))}
+                  </div>
                 </div>
-
-                <div className="card p-0 overflow-hidden">
-                  {txns.map((txn) => (
-                    <TransactionRow key={txn.id} transaction={txn} />
-                  ))}
-                </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

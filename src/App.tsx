@@ -100,8 +100,12 @@ export default function App() {
 
   if (!authInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-        <i className="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600" />
+      <div style={{
+        minHeight: '100svh',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: 'var(--bg)',
+      }}>
+        <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: 28, color: 'var(--text-3)' }} />
       </div>
     );
   }

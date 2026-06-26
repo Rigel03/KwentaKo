@@ -5,15 +5,15 @@ import { exportBackupJSON } from '../utils/backup';
 import Toast from '../components/ui/Toast';
 
 export default function Auth() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email,         setEmail]         = useState('');
+  const [password,      setPassword]      = useState('');
+  const [loading,       setLoading]       = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp,      setIsSignUp]      = useState(false);
+  const [showPassword,  setShowPassword]  = useState(false);
 
   const showToast = useStore((s) => s.showToast);
-  const toasts = useStore((s) => s.toasts);
+  const toasts    = useStore((s) => s.toasts);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,43 +51,70 @@ export default function Auth() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-5 py-10"
-      style={{ background: 'var(--bg)' }}
+      style={{
+        minHeight: '100svh',
+        backgroundColor: 'var(--bg)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+      }}
     >
-      {/* ── Card ───────────────────────────────────────────────────── */}
-      <div
-        className="w-full max-w-sm rounded-3xl shadow-2xl p-7 space-y-6 animate-slide-up"
-        style={{ background: 'var(--surface)', border: '1px solid var(--divider)' }}
-      >
-        {/* ── Brand ── */}
-        <div className="text-center space-y-3">
-          <div
-            className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center mb-4 overflow-hidden"
-            style={{
-              background: '#FFFFFF',
-              border: '2.5px solid #E0E7FF',
-              boxShadow: '0 8px 32px rgba(37,99,235,0.15), 0 0 0 6px rgba(99,102,241,0.08)',
-            }}
-          >
-            <img src="/logo.jpg" alt="KwentaKo" className="w-14 h-14 object-contain" />
-          </div>
-          <div>
-            <h1
-              className="text-2xl font-bold tracking-tight"
-              style={{ color: 'var(--text-1)' }}
-            >
-              KwentaKo
-            </h1>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-              Your personal money diary
-            </p>
-          </div>
-        </div>
-
-        {/* ── Tab Toggle ── */}
+      {/* Logo + Brand */}
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <div
-          className="flex rounded-xl p-1 gap-1"
-          style={{ background: 'var(--surface-2)' }}
+          style={{
+            width: 80, height: 80,
+            borderRadius: 22,
+            background: 'var(--surface)',
+            border: '1px solid var(--divider)',
+            boxShadow: 'var(--shadow)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+            overflow: 'hidden',
+          }}
+        >
+          <img src="/logo.jpg" alt="KwentaKo" style={{ width: 56, height: 56, objectFit: 'contain' }} />
+        </div>
+        <h1 style={{
+          fontSize: 28, fontWeight: 700,
+          color: 'var(--text-1)',
+          letterSpacing: -0.5,
+          margin: 0,
+        }}>
+          KwentaKo
+        </h1>
+        <p style={{ fontSize: 14, color: 'var(--text-3)', marginTop: 4 }}>
+          Your personal money diary
+        </p>
+      </div>
+
+      {/* Card */}
+      <div
+        className="animate-slide-up"
+        style={{
+          width: '100%',
+          maxWidth: 380,
+          backgroundColor: 'var(--surface)',
+          borderRadius: 28,
+          padding: '28px 24px',
+          boxShadow: 'var(--shadow-lg)',
+          border: '1px solid var(--divider)',
+        }}
+      >
+        {/* Tab Toggle */}
+        <div
+          style={{
+            display: 'flex',
+            background: 'var(--surface-2)',
+            borderRadius: 14,
+            padding: 4,
+            gap: 4,
+            marginBottom: 24,
+          }}
         >
           {['Log In', 'Sign Up'].map((label, i) => {
             const active = isSignUp === (i === 1);
@@ -96,11 +123,18 @@ export default function Auth() {
                 key={label}
                 type="button"
                 onClick={() => setIsSignUp(i === 1)}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
                 style={{
-                  background: active ? 'var(--accent)' : 'transparent',
-                  color: active ? '#fff' : 'var(--text-3)',
-                  boxShadow: active ? '0 2px 8px var(--accent-alpha)' : 'none',
+                  flex: 1,
+                  padding: '9px 0',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: active ? 'var(--text-1)' : 'transparent',
+                  color: active ? 'var(--bg)' : 'var(--text-3)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all 200ms ease',
                 }}
               >
                 {label}
@@ -109,20 +143,20 @@ export default function Auth() {
           })}
         </div>
 
-        {/* ── Email Form ── */}
-        <form onSubmit={handleEmailAuth} className="space-y-4">
-          {/* Email */}
-          <div className="space-y-1.5">
-            <label
-              className="text-xs font-semibold uppercase tracking-widest"
-              style={{ color: 'var(--text-3)' }}
-            >
-              Email
-            </label>
-            <div className="relative">
+        {/* Email Form */}
+        <form onSubmit={handleEmailAuth}>
+          <div style={{ marginBottom: 14 }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)', marginBottom: 6, letterSpacing: '0.3px' }}>
+              EMAIL
+            </p>
+            <div style={{ position: 'relative' }}>
               <i
-                className="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-sm"
-                style={{ color: 'var(--text-3)' }}
+                className="fa-solid fa-envelope"
+                style={{
+                  position: 'absolute', left: 14, top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-3)', fontSize: 13,
+                }}
               />
               <input
                 type="email"
@@ -136,18 +170,18 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* Password */}
-          <div className="space-y-1.5">
-            <label
-              className="text-xs font-semibold uppercase tracking-widest"
-              style={{ color: 'var(--text-3)' }}
-            >
-              Password
-            </label>
-            <div className="relative">
+          <div style={{ marginBottom: 20 }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)', marginBottom: 6, letterSpacing: '0.3px' }}>
+              PASSWORD
+            </p>
+            <div style={{ position: 'relative' }}>
               <i
-                className="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-sm"
-                style={{ color: 'var(--text-3)' }}
+                className="fa-solid fa-lock"
+                style={{
+                  position: 'absolute', left: 14, top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-3)', fontSize: 13,
+                }}
               />
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -161,11 +195,15 @@ export default function Auth() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-100 opacity-60"
-                style={{ color: 'var(--text-2)' }}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute', right: 14, top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none', border: 'none',
+                  color: 'var(--text-3)', cursor: 'pointer',
+                  padding: 0,
+                }}
               >
-                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'} text-sm`} />
+                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{ fontSize: 14 }} />
               </button>
             </div>
           </div>
@@ -173,65 +211,61 @@ export default function Auth() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary flex items-center justify-center gap-2"
-            style={{ height: '48px' }}
+            className="btn-primary"
+            style={{ height: 50, opacity: loading ? 0.6 : 1 }}
           >
-            {loading ? (
-              <><i className="fa-solid fa-circle-notch fa-spin" /> Processing…</>
-            ) : (
-              <>{isSignUp ? 'Create Account' : 'Log In'}</>
-            )}
+            {loading
+              ? <><i className="fa-solid fa-circle-notch fa-spin" /> Processing…</>
+              : isSignUp ? 'Create Account' : 'Log In'}
           </button>
         </form>
 
-        {/* ── Divider ── */}
-        <div className="relative flex items-center gap-3">
-          <div className="flex-1 h-px" style={{ background: 'var(--divider)' }} />
-          <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
-            or
-          </span>
-          <div className="flex-1 h-px" style={{ background: 'var(--divider)' }} />
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--divider)' }} />
+          <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 500 }}>or</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--divider)' }} />
         </div>
 
-        {/* ── Google Button ── */}
+        {/* Google */}
         <button
           onClick={handleGoogleLogin}
           disabled={googleLoading}
           type="button"
-          className="w-full flex items-center justify-center gap-2.5 rounded-2xl py-3 text-sm font-semibold transition-all duration-150 active:scale-95 disabled:opacity-60"
-          style={{
-            background: 'var(--surface-2)',
-            color: 'var(--text-1)',
-            border: '1px solid var(--divider)',
-          }}
+          className="btn-secondary"
+          style={{ height: 50, gap: 10, opacity: googleLoading ? 0.6 : 1 }}
         >
-          {googleLoading ? (
-            <i className="fa-solid fa-circle-notch fa-spin text-sm" />
-          ) : (
-            <i className="fa-brands fa-google text-sm text-red-500" />
-          )}
+          {googleLoading
+            ? <i className="fa-solid fa-circle-notch fa-spin" />
+            : <i className="fa-brands fa-google" style={{ color: '#EA4335', fontSize: 16 }} />}
           Continue with Google
         </button>
       </div>
 
-      {/* ── Backup Link ── */}
+      {/* Backup link */}
       <button
         onClick={() => {
           exportBackupJSON();
           showToast('Local backup downloaded ✓');
         }}
-        className="mt-6 text-xs transition-opacity hover:opacity-100 opacity-40"
-        style={{ color: 'var(--text-3)' }}
+        style={{
+          marginTop: 24,
+          background: 'none', border: 'none',
+          color: 'var(--text-3)', fontSize: 12,
+          cursor: 'pointer', opacity: 0.5,
+          fontFamily: 'inherit',
+          transition: 'opacity 200ms',
+        }}
+        onMouseOver={(e) => (e.currentTarget.style.opacity = '1')}
+        onMouseOut={(e)  => (e.currentTarget.style.opacity = '0.5')}
       >
-        <i className="fa-solid fa-download mr-1" />
-        Export Local Backup (JSON)
+        <i className="fa-solid fa-download" style={{ marginRight: 5 }} />
+        Export Local Backup
       </button>
 
-      {/* ── Toasts ── */}
-      <div className="fixed bottom-8 inset-x-0 z-50 flex flex-col items-center gap-2 px-4 pointer-events-none">
-        {toasts.map((t) => (
-          <Toast key={t.id} toast={t} />
-        ))}
+      {/* Toasts */}
+      <div style={{ position: 'fixed', bottom: 32, inset: '0 0 auto', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 16px', pointerEvents: 'none' }}>
+        {toasts.map((t) => <Toast key={t.id} toast={t} />)}
       </div>
     </div>
   );

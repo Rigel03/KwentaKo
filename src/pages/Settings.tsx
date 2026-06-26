@@ -7,61 +7,99 @@ import { format } from 'date-fns';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { ThemeMode } from '../types';
 
-const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string; desc: string }[] = [
-  { id: 'system', label: 'System', icon: 'fa-circle-half-stroke', desc: 'Follow device' },
-  { id: 'light',  label: 'Light',  icon: 'fa-sun',                desc: 'Always light' },
-  { id: 'dark',   label: 'Dark',   icon: 'fa-moon',               desc: 'Always dark' },
-  { id: 'cozy',   label: 'Cozy',   icon: 'fa-mug-hot',            desc: 'Warm & soft' },
-  { id: 'amoled', label: 'AMOLED', icon: 'fa-circle',             desc: 'Pure black' },
+const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string; bg: string; color: string }[] = [
+  { id: 'light',  label: 'Light',  icon: 'fa-sun',                bg: '#F9F9F9', color: '#1C1C1E' },
+  { id: 'dark',   label: 'Dark',   icon: 'fa-moon',               bg: '#1C1C1E', color: '#F2F2F7' },
+  { id: 'cozy',   label: 'Cozy',   icon: 'fa-mug-hot',            bg: '#F0EBE1', color: '#2C2A27' },
+  { id: 'amoled', label: 'AMOLED', icon: 'fa-circle',             bg: '#000000', color: '#F2F2F7' },
+  { id: 'system', label: 'System', icon: 'fa-circle-half-stroke', bg: 'linear-gradient(135deg,#F9F9F9 50%,#1C1C1E 50%)', color: '#636366' },
 ];
-
-function SettingsRow({
-  icon, label, sublabel, children, onClick, danger,
-}: {
-  icon: string; label: string; sublabel?: string;
-  children?: React.ReactNode; onClick?: () => void; danger?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={!onClick && !children}
-      className={`w-full flex items-center gap-3 px-4 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${danger ? 'text-red-500' : ''}`}
-    >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-        danger ? 'bg-red-100 dark:bg-red-900/30' : 'bg-slate-100 dark:bg-slate-800'
-      }`}>
-        <i className={`fa-solid ${icon} text-sm ${
-          danger ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'
-        }`} />
-      </div>
-      <div className="flex-1 text-left">
-        <p className={`text-sm font-semibold ${danger ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>
-          {label}
-        </p>
-        {sublabel && (
-          <p className="text-xs text-slate-400 dark:text-slate-500">{sublabel}</p>
-        )}
-      </div>
-      {children ?? (onClick && <i className="fa-solid fa-chevron-right text-xs text-slate-400" />)}
-    </button>
-  );
-}
 
 interface SettingsProps {
   onNavigateToAccounts: () => void;
   onNavigateToCategories: () => void;
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p style={{
+        fontSize: 11, fontWeight: 700, color: 'var(--text-3)',
+        textTransform: 'uppercase', letterSpacing: '0.7px',
+        padding: '0 20px', marginBottom: 6,
+      }}>
+        {title}
+      </p>
+      <div className="card" style={{ padding: 0, overflow: 'hidden', margin: '0 20px' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Row({
+  icon, label, sublabel, onClick, danger, children,
+}: {
+  icon: string; label: string; sublabel?: string;
+  onClick?: () => void; danger?: boolean; children?: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={!onClick}
+      style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '14px 16px',
+        border: 'none',
+        background: 'transparent',
+        textAlign: 'left',
+        cursor: onClick ? 'pointer' : 'default',
+        fontFamily: 'inherit',
+        borderBottom: '1px solid var(--divider)',
+        transition: 'background 150ms ease',
+      }}
+    >
+      <div style={{
+        width: 36, height: 36, borderRadius: 10,
+        background: danger ? 'rgba(255,59,48,0.1)' : 'var(--surface-2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <i className={`fa-solid ${icon}`} style={{
+          fontSize: 14,
+          color: danger ? 'var(--expense)' : 'var(--text-2)',
+        }} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <p style={{
+          fontSize: 15, fontWeight: 500,
+          color: danger ? 'var(--expense)' : 'var(--text-1)',
+        }}>
+          {label}
+        </p>
+        {sublabel && (
+          <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 1 }}>{sublabel}</p>
+        )}
+      </div>
+      {children}
+      {onClick && !children && (
+        <i className="fa-solid fa-chevron-right" style={{ fontSize: 11, color: 'var(--text-3)' }} />
+      )}
+    </button>
+  );
+}
+
 export default function Settings({ onNavigateToAccounts, onNavigateToCategories }: SettingsProps) {
   const { settings, updateSettings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  const handleThemeChange = (t: ThemeMode) => {
-    setTheme(t);
-  };
+  const handleThemeChange = (t: ThemeMode) => { setTheme(t); };
 
   const handleExportCSV = () => {
-    const csv = exportTransactionsCSV(transactions, accounts, categories);
+    const csv      = exportTransactionsCSV(transactions, accounts, categories);
     const filename = `kwentako_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
     downloadCSV(csv, filename);
     showToast('Export downloaded ✓');
@@ -75,22 +113,16 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     importBackupJSON(file)
       .then(() => showToast('Data restored from backup ✓'))
       .catch((err) => {
         console.error(err);
         showToast('Failed to restore backup', 'error');
       })
-      .finally(() => {
-        e.target.value = ''; // Reset input
-      });
+      .finally(() => { e.target.value = ''; });
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
+  const handleLogout = async () => { await supabase.auth.signOut(); };
   const handleClearData = () => {
     clearAllData();
     showToast('All data cleared');
@@ -98,168 +130,166 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)', paddingBottom: 40 }}>
+
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h1>
+      <div style={{ padding: '24px 20px 20px' }}>
+        <p className="page-title">Settings</p>
       </div>
 
-      <div className="py-4 space-y-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-        {/* Appearance */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+        {/* Theme Picker */}
+        <div>
+          <p style={{
+            fontSize: 11, fontWeight: 700, color: 'var(--text-3)',
+            textTransform: 'uppercase', letterSpacing: '0.7px',
+            padding: '0 20px', marginBottom: 6,
+          }}>
             Appearance
           </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: 10,
+            padding: '0 20px',
+          }}>
+            {THEME_OPTIONS.map((opt) => {
+              const isActive = settings.theme === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  id={`theme-${opt.id}`}
+                  onClick={() => handleThemeChange(opt.id)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '12px 0 10px',
+                    borderRadius: 16,
+                    border: isActive ? '2px solid var(--text-1)' : '2px solid var(--divider)',
+                    background: isActive ? 'var(--surface)' : 'var(--surface-2)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all 200ms ease',
+                  }}
+                >
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 10,
+                    background: opt.id === 'system' ? 'linear-gradient(135deg,#F9F9F9 50%,#1C1C1E 50%)' : opt.bg,
+                    border: '1px solid var(--divider)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <i className={`fa-solid ${opt.icon}`} style={{ fontSize: 13, color: opt.color }} />
+                  </div>
+                  <p style={{
+                    fontSize: 10, fontWeight: isActive ? 700 : 500,
+                    color: isActive ? 'var(--text-1)' : 'var(--text-3)',
+                    lineHeight: 1,
+                  }}>
+                    {opt.label}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-          {/* Theme — 2x2 grid */}
-          <div className="px-4 pb-4">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">App Theme</p>
-            <div className="grid grid-cols-2 gap-2">
-              {THEME_OPTIONS.map((opt) => {
-                const isActive = settings.theme === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    id={`theme-${opt.id}`}
-                    onClick={() => handleThemeChange(opt.id)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-2xl border text-left transition-all duration-200 ${
-                      isActive
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                    }`}
-                  >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isActive
-                        ? 'bg-indigo-100 dark:bg-indigo-800'
-                        : opt.id === 'amoled'
-                        ? 'bg-black'
-                        : 'bg-slate-100 dark:bg-slate-800'
-                    }`}>
-                      <i className={`fa-solid ${opt.icon} text-sm ${
-                        isActive
-                          ? 'text-indigo-600 dark:text-indigo-400'
-                          : opt.id === 'amoled'
-                          ? 'text-white'
-                          : 'text-slate-500 dark:text-slate-400'
-                      }`} />
-                    </div>
-                    <div>
-                      <p className={`text-sm font-semibold ${
-                        isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'
-                      }`}>
-                        {opt.label}
-                      </p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">{opt.desc}</p>
-                    </div>
-                    {isActive && (
-                      <i className="fa-solid fa-circle-check text-indigo-500 text-sm ml-auto" />
-                    )}
-                  </button>
-                );
-              })}
+        {/* Profile */}
+        <div>
+          <p style={{
+            fontSize: 11, fontWeight: 700, color: 'var(--text-3)',
+            textTransform: 'uppercase', letterSpacing: '0.7px',
+            padding: '0 20px', marginBottom: 6,
+          }}>
+            Profile
+          </p>
+          <div style={{ padding: '0 20px' }}>
+            <div className="card">
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)', marginBottom: 6 }}>
+                YOUR NAME
+              </p>
+              <input
+                value={settings.userName ?? ''}
+                onChange={(e) => updateSettings({ userName: e.target.value })}
+                placeholder="How should we call you?"
+                className="input-field"
+              />
             </div>
           </div>
         </div>
 
-        {/* Data Management */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            Manage
-          </p>
-          <SettingsRow
+        {/* Manage */}
+        <Section title="Manage">
+          <Row
             icon="fa-wallet" label="Accounts"
             sublabel={`${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
             onClick={onNavigateToAccounts}
           />
-          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
-          <SettingsRow
+          <Row
             icon="fa-tag" label="Categories"
             sublabel={`${categories.length} categories`}
             onClick={onNavigateToCategories}
           />
-        </div>
+          <div style={{ borderBottom: 'none' }}>
+            <Row
+              icon="fa-arrow-right-from-bracket"
+              label="Log Out"
+              onClick={handleLogout}
+              danger
+            />
+          </div>
+        </Section>
 
         {/* Data */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            Data
-          </p>
-          <SettingsRow
-            icon="fa-file-export" label="Backup Data (JSON)"
-            sublabel="Save a complete copy of everything"
+        <Section title="Data">
+          <Row
+            icon="fa-file-export" label="Backup Data"
+            sublabel="Save a complete copy (JSON)"
             onClick={handleBackupJSON}
           />
-          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
-          <SettingsRow
-            icon="fa-file-import" label="Restore Backup (JSON)"
-            sublabel="Import from a previous backup file"
+          <Row
+            icon="fa-file-import" label="Restore Backup"
+            sublabel="Import from a previous backup"
             onClick={() => document.getElementById('json-upload')?.click()}
           >
-            <input
-              id="json-upload"
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleImportJSON}
-            />
-          </SettingsRow>
-          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
-          <SettingsRow
+            <input id="json-upload" type="file" accept=".json" style={{ display: 'none' }} onChange={handleImportJSON} />
+          </Row>
+          <Row
             icon="fa-file-csv" label="Export CSV"
             sublabel={`${transactions.length} transactions`}
             onClick={handleExportCSV}
           />
-          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800" />
-          <SettingsRow
-            icon="fa-trash-can" label="Clear All Data"
-            sublabel="Cannot be undone"
-            onClick={() => setShowClearConfirm(true)}
-            danger
-          />
-        </div>
-
-        {/* Account */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700">
-          <p className="px-4 pt-4 pb-1 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            Profile & Account
-          </p>
-          <div className="px-4 py-2">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Your Name</p>
-            <input
-              value={settings.userName ?? ''}
-              onChange={(e) => updateSettings({ userName: e.target.value })}
-              placeholder="How should we call you?"
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+          <div style={{ borderBottom: 'none' }}>
+            <Row
+              icon="fa-trash-can" label="Clear All Data"
+              sublabel="Cannot be undone"
+              onClick={() => setShowClearConfirm(true)}
+              danger
             />
           </div>
-          <div className="h-px mx-4 bg-slate-100 dark:bg-slate-800 mt-2" />
-          <SettingsRow
-            icon="fa-arrow-right-from-bracket" label="Log Out"
-            onClick={handleLogout}
-            danger
-          />
-        </div>
+        </Section>
 
-        {/* App Info */}
-        <div className="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700 px-4 py-4">
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">About</p>
-          <div className="flex items-center gap-4">
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #4F46E5, #2563EB)' }}
-            >
-              <i className="fa-solid fa-peso-sign text-white text-xl" />
+        {/* About */}
+        <div style={{ padding: '0 20px' }}>
+          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: 14,
+              overflow: 'hidden', flexShrink: 0,
+              border: '1px solid var(--divider)',
+            }}>
+              <img src="/logo.jpg" alt="KwentaKo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">KwentaKo</p>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Personal Money Tracker v1.1</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                Offline-first · PHP · localStorage
-              </p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-1)' }}>KwentaKo</p>
+              <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>Personal Money Tracker · v2.0</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>Offline-first · PHP · Supabase</p>
             </div>
           </div>
         </div>
+
       </div>
 
       <ConfirmDialog
