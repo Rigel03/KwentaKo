@@ -51,11 +51,15 @@ export default function App() {
     const root = document.documentElement;
     if (settings.theme === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('amoled');
+    } else if (settings.theme === 'amoled') {
+      root.classList.add('dark', 'amoled');
     } else if (settings.theme === 'light') {
-      root.classList.remove('dark');
+      root.classList.remove('dark', 'amoled');
     } else {
       // System
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      root.classList.remove('amoled'); // System is never AMOLED by default
       if (mq.matches) root.classList.add('dark');
       else root.classList.remove('dark');
 
@@ -97,8 +101,8 @@ export default function App() {
 
   if (!authInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <i className="fa-solid fa-circle-notch fa-spin text-3xl" style={{ color: 'var(--accent)' }} />
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900">
+        <i className="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600" />
       </div>
     );
   }

@@ -9,24 +9,52 @@
 
 /* ─── CSS Design Tokens ──────────────────────────────────────────────────── */
 :root {
+  /* Accent / Brand */
   --accent: #2563EB;
   --accent-hover: #1D4ED8;
   --accent-light: #EFF6FF;
   --accent-dark: #1E3A8A;
+  --accent-alpha: rgba(37, 99, 235, 0.25);
 
+  /* Semantic colors */
   --income: #16A34A;
   --expense: #EF4444;
   --transfer: #2563EB;
 
+  /* Hero gradient */
   --hero-from: #4F46E5;
   --hero-mid:  #7C3AED;
   --hero-to:   #2563EB;
 
+  /* ── Light mode surface tokens ── */
+  --bg:        #F1F5F9;
+  --surface:   #FFFFFF;
+  --surface-2: #F1F5F9;
+  --surface-3: #E2E8F0;
+  --text-1:    #0F172A;
+  --text-2:    #334155;
+  --text-3:    #64748B;
+  --divider:   #E2E8F0;
+
+  /* Layout */
   --nav-height: 64px;
   --sheet-max-height: 92vh;
   --radius: 16px;
   --radius-sm: 10px;
   --transition: 150ms ease;
+}
+
+/* ── Dark mode surface tokens ── */
+.dark {
+  --bg:        #0F172A;
+  --surface:   #1E293B;
+  --surface-2: #293548;
+  --surface-3: #334155;
+  --text-1:    #F8FAFC;
+  --text-2:    #CBD5E1;
+  --text-3:    #64748B;
+  --divider:   #334155;
+  --accent-alpha: rgba(99, 102, 241, 0.3);
 }
 
 /* ─── AMOLED theme override ──────────────────────────────────────────────── */
@@ -99,7 +127,6 @@ body {
 .hero-gradient {
   background: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-mid) 50%, var(--hero-to) 100%);
   position: relative;
-  overflow: hidden;
 }
 
 .hero-gradient::before {
@@ -257,18 +284,16 @@ body {
 /* ─── Category Tile ──────────────────────────────────────────────────────── */
 .cat-tile {
   @apply flex flex-col items-center justify-center gap-1.5;
-  @apply p-2.5 rounded-2xl aspect-square;
-  @apply border border-transparent;
+  @apply p-2.5 rounded-full aspect-square;
   @apply text-xs font-medium text-center;
-  @apply transition-all duration-150 cursor-pointer;
-  @apply bg-slate-100 dark:bg-slate-700;
+  @apply transition-all duration-300 cursor-pointer;
+  @apply bg-slate-100 dark:bg-slate-700/50;
 }
 
 .cat-tile-selected {
-  @apply border-blue-600 bg-blue-50 dark:bg-blue-900/40;
-  @apply text-blue-700 dark:text-blue-300;
-  transform: scale(1.08);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  @apply bg-blue-100/50 dark:bg-blue-900/30;
+  @apply text-blue-700 dark:text-blue-400 font-bold;
+  transform: scale(1.05);
 }
 
 /* ─── Transaction Row ────────────────────────────────────────────────────── */

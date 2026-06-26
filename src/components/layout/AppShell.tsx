@@ -12,7 +12,7 @@ export default function AppShell({ children }: AppShellProps) {
   const isAddSheetOpen = useStore((s) => s.isAddSheetOpen);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text-1)' }}>
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white">
       {/* Main scrollable content */}
       <div className="app-container">
         {children}

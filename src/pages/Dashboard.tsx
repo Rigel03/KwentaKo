@@ -7,7 +7,15 @@ import AccountCard from '../components/ui/AccountCard';
 import StatCard from '../components/ui/StatCard';
 import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
-import type { PeriodFilter } from '../types';
+import type { PeriodFilter, ThemeMode } from '../types';
+
+const THEME_CYCLE: ThemeMode[] = ['light', 'dark', 'amoled'];
+const THEME_ICONS: Record<ThemeMode, string> = {
+  light:  'fa-sun',
+  dark:   'fa-moon',
+  amoled: 'fa-circle-half-stroke',
+  system: 'fa-circle-half-stroke',
+};
 
 const PERIODS: { id: PeriodFilter; label: string }[] = [
   { id: 'today', label: 'Today' },
@@ -37,7 +45,14 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
   const accounts     = useStore((s) => s.accounts);
   const transactions = useStore((s) => s.transactions);
   const settings     = useStore((s) => s.settings);
+  const setTheme     = useStore((s) => s.setTheme);
   const openAddSheet = useStore((s) => s.openAddSheet);
+
+  const cycleTheme = () => {
+    const idx  = THEME_CYCLE.indexOf(settings.theme as ThemeMode);
+    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+    setTheme(next);
+  };
 
   const activeAccounts = accounts.filter((a) => a.isActive);
   const netWorth       = getNetWorth(activeAccounts, transactions);
@@ -64,11 +79,11 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
   const today = new Date();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-6">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 pb-6">
       {/* ── Hero Header ──────────────────────────────────────────────────── */}
-      <div className="hero-gradient pt-safe px-5 pb-12">
+      <div className="hero-gradient pt-safe px-5 pb-8 rounded-b-[2.5rem]">
         {/* Top bar */}
-        <div className="pt-4 flex items-center justify-between mb-6">
+        <div className="pt-4 flex items-center justify-between mb-5">
           <div>
             <p className="text-indigo-200 text-sm font-medium">
               {GREETINGS(settings.userName)} 👋
@@ -79,13 +94,11 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={onNavigateToTransactions}
-              aria-label="History"
-              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors relative"
+              onClick={cycleTheme}
+              aria-label="Toggle theme"
+              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
             >
-              <i className="fa-solid fa-bell text-white text-sm" />
-              {/* Notification dot */}
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-yellow-400 rounded-full animate-ring-pulse" />
+              <i className={`fa-solid ${THEME_ICONS[settings.theme as ThemeMode] ?? 'fa-circle-half-stroke'} text-white text-sm`} />
             </button>
           </div>
         </div>
@@ -116,7 +129,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
       </div>
 
       {/* ── Content ──────────────────────────────────────────────────────── */}
-      <div className="px-4 -mt-8 space-y-4">
+      <div className="px-4 pt-5 space-y-4">
 
         {/* ── Account Cards Row ─────────────────────────────────────────── */}
         <section>
@@ -143,11 +156,12 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
               />
             </div>
           ) : (
-            <div className="flex flex-col gap-3 pb-2">
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
               {activeAccounts.map((acc) => (
                 <AccountCard
                   key={acc.id}
                   account={acc}
+                  compact
                   onClick={onNavigateToAccounts}
                 />
               ))}

@@ -56,7 +56,7 @@ export interface Category {
 // ─── App State ───────────────────────────────────────────────────────────────
 
 export type PeriodFilter = 'today' | 'week' | 'month' | 'year';
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = 'system' | 'light' | 'dark' | 'amoled';
 export type AnalyticsPeriod = 'week' | 'month' | 'year' | 'custom';
 
 export interface AppSettings {

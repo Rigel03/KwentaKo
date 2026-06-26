@@ -53,7 +53,7 @@ export default function Transactions() {
   }, [filtered]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4 sticky top-0 z-10">
         <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
@@ -69,7 +69,8 @@ export default function Transactions() {
             placeholder="Search by note…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input-field pl-9"
+            className="input-field"
+            style={{ paddingLeft: '2.25rem' }}
           />
         </div>
 

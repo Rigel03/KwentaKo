@@ -42,29 +42,29 @@ export default function AccountCard({ account, onClick, compact = false }: Accou
     return (
       <button
         onClick={onClick}
-        className="flex-shrink-0 w-48 credit-card text-left hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+        className="flex-shrink-0 w-40 credit-card text-left hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
         style={{ background: gradient }}
       >
-        <div className="credit-card-inner relative h-full p-4 flex flex-col justify-between min-h-[120px]">
+        <div className="credit-card-inner relative h-full p-3 flex flex-col justify-between min-h-[100px]">
           {/* Top row: icon + type badge */}
           <div className="flex items-start justify-between">
-            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-              <i className={`fa-solid ${account.icon} text-white text-sm`} />
+            <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+              <i className={`fa-solid ${account.icon} text-white text-xs`} />
             </div>
-            <span className="text-[10px] font-semibold text-white/70 uppercase tracking-widest bg-white/10 px-2 py-0.5 rounded-full">
+            <span className="text-[9px] font-semibold text-white/70 uppercase tracking-widest bg-white/10 px-1.5 py-0.5 rounded-full">
               {TYPE_LABELS[account.type] ?? 'Account'}
             </span>
           </div>
 
           {/* Bottom: name + balance */}
           <div>
-            <p className="text-white/70 text-[10px] font-semibold uppercase tracking-widest mb-0.5 truncate">
+            <p className="text-white/70 text-[9px] font-semibold uppercase tracking-widest mb-0.5 truncate">
               {account.name}
             </p>
-            <p className={`text-base font-bold font-mono text-white leading-tight ${
+            <p className={`text-sm font-bold font-mono text-white leading-tight ${
               isNegative ? 'opacity-70' : ''
             }`}>
-              {isNegative && <span className="text-red-300 text-xs mr-1">▼</span>}
+              {isNegative && <span className="text-red-300 text-xs mr-0.5">▼</span>}
               {formatPHP(balance)}
             </p>
           </div>
@@ -73,40 +73,35 @@ export default function AccountCard({ account, onClick, compact = false }: Accou
     );
   }
 
-  // Full credit-card for Accounts page grid
+  // Full card for Accounts page grid — compact row style
   return (
     <button
       onClick={onClick}
       className="credit-card text-left w-full hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
       style={{ background: gradient }}
     >
-      <div className="credit-card-inner relative p-5 flex flex-col gap-3 min-h-[140px]">
-        {/* Top row */}
-        <div className="flex items-start justify-between">
-          <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center">
-            <i className={`fa-solid ${account.icon} text-white text-base`} />
-          </div>
-          <span className="badge text-[10px] bg-white/15 text-white/80 uppercase tracking-widest">
+      <div className="credit-card-inner relative p-3.5 flex items-center gap-3 min-h-[72px]">
+        {/* Icon */}
+        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+          <i className={`fa-solid ${account.icon} text-white text-sm`} />
+        </div>
+
+        {/* Name + type */}
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-sm truncate leading-tight">{account.name}</p>
+          <p className="text-white/60 text-[10px] uppercase tracking-wider mt-0.5">
             {TYPE_LABELS[account.type] ?? 'Account'}
-          </span>
-        </div>
-
-        {/* Chip decoration */}
-        <div className="flex gap-1.5">
-          <div className="w-6 h-4 rounded bg-white/20" />
-          <div className="w-3 h-4 rounded bg-white/10" />
-        </div>
-
-        {/* Account name + balance */}
-        <div>
-          <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1 truncate">
-            {account.name}
           </p>
-          <p className={`text-2xl font-bold font-mono text-white leading-tight ${
+        </div>
+
+        {/* Balance */}
+        <div className="text-right flex-shrink-0">
+          <p className={`text-base font-bold font-mono text-white leading-tight ${
             isNegative ? 'text-red-300' : ''
           }`}>
             {formatPHP(balance)}
           </p>
+          {isNegative && <p className="text-red-300/70 text-[9px] mt-0.5">overdrawn</p>}
         </div>
       </div>
     </button>

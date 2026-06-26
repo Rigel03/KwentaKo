@@ -7,10 +7,7 @@ import { format } from 'date-fns';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { ThemeMode } from '../types';
 
-// Extended to include AMOLED
-type ExtendedTheme = ThemeMode | 'amoled';
-
-const THEME_OPTIONS: { id: ExtendedTheme; label: string; icon: string; desc: string }[] = [
+const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string; desc: string }[] = [
   { id: 'system', label: 'System', icon: 'fa-circle-half-stroke', desc: 'Follow device' },
   { id: 'light',  label: 'Light',  icon: 'fa-sun',                desc: 'Always light' },
   { id: 'dark',   label: 'Dark',   icon: 'fa-moon',               desc: 'Always dark' },
@@ -58,20 +55,8 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
   const { settings, updateSettings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // We store amoled as a pseudo-theme in local state if selected
-  const [localTheme, setLocalTheme] = useState<ExtendedTheme>(
-    (settings.theme as ExtendedTheme) ?? 'system'
-  );
-
-  const handleThemeChange = (t: ExtendedTheme) => {
-    setLocalTheme(t);
-    if (t === 'amoled') {
-      setTheme('dark'); // underlying store uses dark
-      document.documentElement.classList.add('amoled');
-    } else {
-      setTheme(t as ThemeMode);
-      document.documentElement.classList.remove('amoled');
-    }
+  const handleThemeChange = (t: ThemeMode) => {
+    setTheme(t);
   };
 
   const handleExportCSV = () => {
@@ -112,7 +97,7 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4">
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h1>
@@ -131,7 +116,7 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">App Theme</p>
             <div className="grid grid-cols-2 gap-2">
               {THEME_OPTIONS.map((opt) => {
-                const isActive = localTheme === opt.id;
+                const isActive = settings.theme === opt.id;
                 return (
                   <button
                     key={opt.id}

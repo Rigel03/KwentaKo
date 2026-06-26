@@ -1,5 +1,6 @@
 import { useStore } from '../../store/useStore';
 
+
 type Page = 'dashboard' | 'transactions' | 'accounts' | 'analytics' | 'settings';
 
 interface BottomNavProps {
@@ -15,9 +16,6 @@ const NAV_ITEMS = [
   { id: 'settings' as Page,      icon: 'fa-gear',      label: 'Settings' },
 ];
 
-// Visual order without the FAB placeholder slot
-// Indices: 0=Home, 1=History, [FAB], 2=Accounts, 3=Analytics, 4=Settings
-
 export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   const openAddSheet = useStore((s) => s.openAddSheet);
 
@@ -29,23 +27,27 @@ export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
         id={`nav-${item.id}`}
         aria-label={item.label}
         onClick={() => onNavigate(item.id)}
-        className={`nav-item relative ${
-          isActive
-            ? 'text-indigo-600 dark:text-indigo-400'
-            : 'text-slate-400 dark:text-slate-500'
-        }`}
+        className="nav-item relative flex flex-col items-center justify-center gap-0.5 w-16 h-14 rounded-xl transition-all duration-200"
+        style={{ color: isActive ? '#4F46E5' : undefined }}
       >
-        {/* Active top-pill indicator */}
-        {isActive && (
-          <span className="absolute top-1 left-1/2 -translate-x-1/2 w-5 h-1 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.7)]" />
-        )}
+        {/* Faded circle background on active */}
+        <span
+          className="absolute inset-1.5 rounded-xl transition-all duration-300"
+          style={{
+            background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent',
+            transform: isActive ? 'scale(1)' : 'scale(0.7)',
+            opacity: isActive ? 1 : 0,
+          }}
+        />
 
         <i
-          className={`fa-solid ${item.icon} text-lg transition-transform duration-200 ${
-            isActive ? 'scale-110' : ''
+          className={`fa-solid ${item.icon} text-lg relative z-10 transition-all duration-200 ${
+            isActive ? 'scale-110' : 'text-slate-400 dark:text-slate-500'
           }`}
         />
-        <span className={`transition-all duration-200 text-xs ${isActive ? 'font-bold' : 'font-medium'}`}>
+        <span className={`text-xs relative z-10 transition-all duration-200 ${
+          isActive ? 'font-bold' : 'font-medium text-slate-400 dark:text-slate-500'
+        }`}>
           {item.label}
         </span>
       </button>
@@ -54,8 +56,8 @@ export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
 
   return (
     <>
-      <nav className="bottom-nav bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-2.5 z-40 relative flex justify-around px-2">
-        {NAV_ITEMS.map((item) => renderItem(item))}
+      <nav className="bottom-nav bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-1.5 z-40 relative flex justify-around px-1">
+        {NAV_ITEMS.map(renderItem)}
       </nav>
 
       {/* Floating Add Button */}
