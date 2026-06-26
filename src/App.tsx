@@ -10,6 +10,7 @@ import Accounts from './pages/Accounts';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Categories from './pages/Categories';
+import Budget from './pages/Budget';
 
 export default function App() {
   const [page, setPage] = useState<Page | 'categories'>('dashboard');
@@ -49,23 +50,20 @@ export default function App() {
   // ── Dark mode effect
   useEffect(() => {
     const root = document.documentElement;
-    if (settings.theme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('amoled');
-    } else if (settings.theme === 'amoled') {
-      root.classList.add('dark', 'amoled');
-    } else if (settings.theme === 'light') {
-      root.classList.remove('dark', 'amoled');
-    } else {
+    const ALL = ['dark', 'amoled', 'cozy'];
+    root.classList.remove(...ALL);
+
+    if (settings.theme === 'dark')   root.classList.add('dark');
+    else if (settings.theme === 'amoled') root.classList.add('dark', 'amoled');
+    else if (settings.theme === 'cozy')   root.classList.add('cozy');
+    else if (settings.theme === 'light')  { /* no class needed */ }
+    else {
       // System
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      root.classList.remove('amoled'); // System is never AMOLED by default
       if (mq.matches) root.classList.add('dark');
-      else root.classList.remove('dark');
-
       const handler = (e: MediaQueryListEvent) => {
+        root.classList.remove(...ALL);
         if (e.matches) root.classList.add('dark');
-        else root.classList.remove('dark');
       };
       mq.addEventListener('change', handler);
       return () => mq.removeEventListener('change', handler);
@@ -84,6 +82,7 @@ export default function App() {
       case 'transactions': return <Transactions />;
       case 'accounts':     return <Accounts />;
       case 'analytics':    return <Analytics />;
+      case 'budget':       return <Budget />;
       case 'settings':
         return (
           <Settings

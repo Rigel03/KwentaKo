@@ -11,6 +11,7 @@ const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string; desc: string 
   { id: 'system', label: 'System', icon: 'fa-circle-half-stroke', desc: 'Follow device' },
   { id: 'light',  label: 'Light',  icon: 'fa-sun',                desc: 'Always light' },
   { id: 'dark',   label: 'Dark',   icon: 'fa-moon',               desc: 'Always dark' },
+  { id: 'cozy',   label: 'Cozy',   icon: 'fa-mug-hot',            desc: 'Warm & soft' },
   { id: 'amoled', label: 'AMOLED', icon: 'fa-circle',             desc: 'Pure black' },
 ];
 

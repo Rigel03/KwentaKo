@@ -56,7 +56,7 @@ export interface Category {
 // ─── App State ───────────────────────────────────────────────────────────────
 
 export type PeriodFilter = 'today' | 'week' | 'month' | 'year';
-export type ThemeMode = 'system' | 'light' | 'dark' | 'amoled';
+export type ThemeMode = 'system' | 'light' | 'dark' | 'amoled' | 'cozy';
 export type AnalyticsPeriod = 'week' | 'month' | 'year' | 'custom';
 
 export interface AppSettings {
@@ -65,7 +65,17 @@ export interface AppSettings {
   defaultAccountId: string | null;
   analyticsDefaultPeriod: AnalyticsPeriod;
   hasSeededData: boolean;
-  userName?: string;   // Display name shown in greeting
+  userName?: string;
+}
+
+// ─── Budget ──────────────────────────────────────────────────────────────────
+
+export interface Budget {
+  id: string;
+  categoryId: string;
+  amount: number;       // centavos
+  period: 'monthly' | 'weekly';
+  createdAt: string;
 }
 
 export interface ToastMessage {
@@ -73,3 +83,4 @@ export interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info';
 }
+

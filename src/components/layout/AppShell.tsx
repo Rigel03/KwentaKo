@@ -8,17 +8,20 @@ interface AppShellProps {
 }
 
 export default function AppShell({ children }: AppShellProps) {
-  const toasts        = useStore((s) => s.toasts);
+  const toasts         = useStore((s) => s.toasts);
   const isAddSheetOpen = useStore((s) => s.isAddSheetOpen);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: 'var(--bg)', color: 'var(--text-1)' }}
+    >
       {/* Main scrollable content */}
       <div className="app-container">
         {children}
       </div>
 
-      {/* Add Entry Bottom Sheet */}
+      {/* Add Entry Sheet / Full-screen form */}
       {isAddSheetOpen && <AddEntrySheet />}
 
       {/* Toast notifications */}
