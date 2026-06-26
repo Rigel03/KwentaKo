@@ -29,6 +29,17 @@ const GREETING = (name?: string) => {
   return name ? `${g}, ${name}` : g;
 };
 
+const getFunPhrase = (d: Date) => {
+  const day = d.getDay();
+  if (day === 1) return 'Marvelous Monday';
+  if (day === 2) return 'Terrific Tuesday';
+  if (day === 3) return 'Wonderful Wednesday';
+  if (day === 4) return 'Thrilling Thursday';
+  if (day === 5) return 'Finally Friday';
+  if (day === 6) return 'Super Saturday';
+  return 'Serene Sunday';
+};
+
 interface DashboardProps {
   onNavigateToTransactions: () => void;
   onNavigateToAccounts: () => void;
@@ -36,13 +47,16 @@ interface DashboardProps {
 
 export default function Dashboard({ onNavigateToTransactions, onNavigateToAccounts }: DashboardProps) {
   const [period, setPeriod]           = useState<PeriodFilter>('month');
-  const [balanceVisible, setBalanceVisible] = useState(true);
 
   const accounts     = useStore((s) => s.accounts);
   const transactions = useStore((s) => s.transactions);
   const settings     = useStore((s) => s.settings);
   const setTheme     = useStore((s) => s.setTheme);
   const openAddSheet = useStore((s) => s.openAddSheet);
+  const balanceVisible = useStore((s) => s.balanceVisible);
+  const toggleBalanceVisibility = useStore((s) => s.toggleBalanceVisibility);
+  const budgets      = useStore((s) => s.budgets);
+  const categories   = useStore((s) => s.categories);
 
   const cycleTheme = () => {
     const idx  = THEME_CYCLE.indexOf(settings.theme as ThemeMode);
@@ -74,10 +88,18 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
       {/* ── Top Bar ─────────────────────────────────────────────────────── */}
       <div className="pt-safe px-5 pt-4 flex items-center justify-between mb-2">
         <div>
-          <p style={{ color: 'var(--text-3)', fontSize: 13, fontWeight: 500 }}>
-            {format(today, 'EEEE, MMMM d')}
-          </p>
-          <p style={{ color: 'var(--text-1)', fontSize: 17, fontWeight: 600, marginTop: 1 }}>
+          <div style={{
+            display: 'inline-block',
+            backgroundColor: 'var(--surface-3)',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            marginBottom: 4,
+          }}>
+            <p style={{ color: 'var(--text-3)', fontSize: 12, fontWeight: 600 }}>
+              {getFunPhrase(today)} | {format(today, 'MMMM d, yyyy')}
+            </p>
+          </div>
+          <p style={{ color: 'var(--text-1)', fontSize: 18, fontWeight: 700, marginTop: 1, letterSpacing: '-0.3px' }}>
             {GREETING(settings.userName)} 👋
           </p>
         </div>
@@ -106,7 +128,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
             {formatPHP(netWorth)}
           </p>
           <button
-            onClick={() => setBalanceVisible((v) => !v)}
+            onClick={toggleBalanceVisibility}
             aria-label={balanceVisible ? 'Hide balance' : 'Show balance'}
             style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
           >
@@ -205,7 +227,10 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
                 <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 500 }}>
                   {acc.name}
                 </p>
-                <p style={{ color: '#fff', fontSize: 20, fontWeight: 700, letterSpacing: -0.5, marginTop: 2 }}>
+                <p style={{ 
+                  color: '#fff', fontSize: 20, fontWeight: 700, letterSpacing: -0.5, marginTop: 2,
+                  filter: balanceVisible ? 'none' : 'blur(8px)', transition: 'filter 0.3s ease', userSelect: 'none'
+                }}>
                   {formatPHP(acc.type === 'cash'
                     ? transactions.filter(t => t.accountId === acc.id && t.type === 'income').reduce((s, t) => s + t.amount, 0)
                     - transactions.filter(t => t.accountId === acc.id && t.type === 'expense').reduce((s, t) => s + t.amount, 0)
@@ -268,33 +293,34 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
           </div>
         </div>
 
-        {/* Net + spend bar */}
-        <div className="card" style={{ padding: 14 }}>
-          <div className="flex items-center justify-between mb-2">
-            <span style={{ fontSize: 13, color: 'var(--text-3)', fontWeight: 500 }}>
-              Net ({PERIODS.find(p => p.id === period)?.label})
-            </span>
-            <span style={{
-              fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums',
-              color: net >= 0 ? 'var(--income)' : 'var(--expense)',
-            }}>
-              {net >= 0 ? '+' : ''}{formatPHP(net)}
-            </span>
+        {/* Current Budgets */}
+        {budgets.length > 0 && (
+          <div className="card" style={{ padding: 14 }}>
+            <p className="section-label" style={{ marginBottom: 12 }}>Current Budgets</p>
+            <div className="flex flex-col gap-3">
+              {budgets.slice(0, 3).map((b) => {
+                const cat = categories.find(c => c.id === b.categoryId);
+                const spent = periodTxns.filter(t => t.categoryId === b.categoryId && t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+                const ratio = Math.min((spent / b.amount) * 100, 100);
+                const color = ratio < 70 ? 'var(--income)' : ratio < 90 ? '#FF9F0A' : 'var(--expense)';
+                return (
+                  <div key={b.id}>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <i className={`fa-solid ${cat?.icon || 'fa-tag'}`} style={{ color: cat?.color || 'var(--text-3)', fontSize: 12 }} />
+                        <span style={{ fontSize: 13, color: 'var(--text-1)', fontWeight: 600 }}>{cat?.name || 'Unknown'}</span>
+                      </div>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{formatPHP(spent)} / {formatPHP(b.amount)}</span>
+                    </div>
+                    <div className="spending-bar-track" style={{ height: 6 }}>
+                      <div className="spending-bar-fill animate-bar-grow" style={{ width: `${ratio}%`, backgroundColor: color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          {totalIncome > 0 && (
-            <>
-              <div className="spending-bar-track">
-                <div
-                  className="spending-bar-fill animate-bar-grow"
-                  style={{ width: `${spendRatio}%`, backgroundColor: spendColor }}
-                />
-              </div>
-              <p style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'right', marginTop: 4 }}>
-                {spendRatio.toFixed(0)}% of income spent
-              </p>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
       {/* ── Recent Transactions ──────────────────────────────────────────── */}

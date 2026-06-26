@@ -46,8 +46,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
       },
       devOptions: {
-        enabled: true,
-        type: 'module',
+        enabled: false,
       },
     }),
   ],

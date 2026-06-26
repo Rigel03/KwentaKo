@@ -4,11 +4,11 @@ export type Page = 'dashboard' | 'transactions' | 'accounts' | 'analytics' | 'bu
 
 const NAV_ITEMS: { id: Page; icon: string; label: string }[] = [
   { id: 'dashboard',    icon: 'fa-house',     label: 'Home' },
-  { id: 'transactions', icon: 'fa-list',       label: 'History' },
-  { id: 'accounts',     icon: 'fa-wallet',     label: 'Accounts' },
-  { id: 'analytics',    icon: 'fa-chart-pie',  label: 'Analytics' },
-  { id: 'budget',       icon: 'fa-bullseye',   label: 'Budget' },
-  { id: 'settings',     icon: 'fa-gear',       label: 'Settings' },
+  { id: 'budget',       icon: 'fa-bullseye',  label: 'Budget' },
+  { id: 'transactions', icon: 'fa-list',      label: 'History' },
+  { id: 'accounts',     icon: 'fa-wallet',    label: 'Accounts' },
+  { id: 'analytics',    icon: 'fa-chart-pie', label: 'Analytics' },
+  { id: 'settings',     icon: 'fa-gear',      label: 'Settings' },
 ];
 
 interface BottomNavProps {

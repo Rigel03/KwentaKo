@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
-import { getNetWorth } from '../utils/calculations';
+import { getNetWorth, getAccountBalance } from '../utils/calculations';
 import { formatPHP } from '../utils/currency';
 import EmptyState from '../components/ui/EmptyState';
 import TransactionRow from '../components/ui/TransactionRow';
@@ -18,8 +19,16 @@ const ACCOUNT_TYPES: { id: AccountType; label: string; icon: string }[] = [
 ];
 
 const PRESET_COLORS = [
+  // Primary
   '#007AFF', '#34C759', '#FF3B30', '#FF9F0A', '#AF52DE',
   '#FF2D55', '#5AC8FA', '#30B0C7', '#5856D6', '#32ADE6',
+  // Darker
+  '#005bb5', '#248a3d', '#b32420', '#cc7a00', '#7b319c',
+  '#b31f3b', '#3d94ba', '#1f8296', '#3c3a99', '#217ca6',
+  // Lighter
+  '#66a8ff', '#70d689', '#ff7a73', '#ffc266', '#d08ceb',
+  '#ff7a94', '#93dcfc', '#71cddb', '#8f8deb', '#75c8f0',
+  // Grays
   '#636366', '#1C1C1E',
 ];
 
@@ -33,26 +42,25 @@ function AccountForm({
   const [name,  setName]  = useState(initial?.name  ?? '');
   const [type,  setType]  = useState<AccountType>(initial?.type  ?? 'cash');
   const [color, setColor] = useState(initial?.color ?? '#007AFF');
+  const [showMoreColors, setShowMoreColors] = useState(false);
   const icon  = ACCOUNT_TYPES.find((t) => t.id === type)?.icon ?? 'fa-circle-question';
   const valid = name.trim().length > 0;
+  const visibleColors = showMoreColors ? PRESET_COLORS : PRESET_COLORS.slice(0, 10);
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'flex-end' }}>
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div
         style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
         onClick={onCancel}
       />
       <div
-        className="sheet-panel animate-slide-up"
+        className="sheet-panel animate-fade-in"
         style={{
-          position: 'relative', width: '100%',
-          borderRadius: '28px 28px 0 0',
-          padding: '24px 20px 40px',
-          maxHeight: '85vh', overflowY: 'auto',
+          position: 'relative', width: '100%', maxWidth: 400,
+          borderRadius: 24, padding: 24,
+          maxHeight: '85svh', overflowY: 'auto'
         }}
       >
-        {/* Handle */}
-        <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--surface-3)', margin: '0 auto 20px' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-1)' }}>
@@ -132,9 +140,11 @@ function AccountForm({
         </div>
 
         {/* Color */}
-        <p className="section-label">Color</p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
-          {PRESET_COLORS.map((c) => (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <p className="section-label" style={{ marginBottom: 0 }}>Color</p>
+        </div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24, alignItems: 'center' }}>
+          {visibleColors.map((c) => (
             <button
               key={c}
               onClick={() => setColor(c)}
@@ -144,13 +154,27 @@ function AccountForm({
                 backgroundColor: c,
                 border: 'none',
                 cursor: 'pointer',
-                transform: color === c ? 'scale(1.2)' : 'scale(1)',
-                boxShadow: color === c ? `0 0 0 3px var(--bg), 0 0 0 5px ${c}` : 'none',
+                outline: color === c ? `2px solid ${c}` : 'none',
+                outlineOffset: 2,
                 transition: 'all 200ms ease',
               }}
               aria-label={`Color ${c}`}
             />
           ))}
+
+          {!showMoreColors && (
+            <button
+              onClick={() => setShowMoreColors(true)}
+              style={{
+                width: 36, height: 36, borderRadius: 10, border: 'none', cursor: 'pointer',
+                background: 'var(--surface-2)', color: 'var(--text-1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 200ms ease',
+              }}
+            >
+              <i className="fa-solid fa-ellipsis" style={{ fontSize: 16 }} />
+            </button>
+          )}
         </div>
 
         <button
@@ -162,16 +186,18 @@ function AccountForm({
           {initial?.id ? 'Save Changes' : 'Add Account'}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 export default function Accounts() {
-  const { accounts, transactions, addAccount, updateAccount, deleteAccount, showToast } = useStore();
+  const { accounts, transactions, addAccount, updateAccount, deleteAccount, showToast, balanceVisible } = useStore();
   const [showForm,          setShowForm]          = useState(false);
   const [editingAccount,    setEditingAccount]    = useState<Account | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [deleteTarget,      setDeleteTarget]      = useState<Account | null>(null);
+  const [isEditMode,        setIsEditMode]        = useState(false);
 
   const activeAccounts = accounts.filter((a) => a.isActive);
   const netWorth       = getNetWorth(activeAccounts, transactions);
@@ -189,13 +215,7 @@ export default function Accounts() {
   };
 
   const handleDelete = (acc: Account) => {
-    const hasTxns = transactions.some((t) => t.accountId === acc.id || t.toAccountId === acc.id);
-    if (hasTxns) {
-      setDeleteTarget(acc);
-    } else {
-      deleteAccount(acc.id);
-      showToast('Account deleted');
-    }
+    setDeleteTarget(acc); // Always show confirmation
   };
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
@@ -209,33 +229,48 @@ export default function Accounts() {
     <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)' }}>
 
       {/* Header */}
-      <div style={{ padding: '24px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <p className="page-title">Accounts</p>
-          <button
-            id="add-account-btn"
-            onClick={() => { setEditingAccount(null); setShowForm(true); }}
-            className="icon-btn"
-            style={{ width: 40, height: 40, borderRadius: 12 }}
-          >
-            <i className="fa-solid fa-plus" style={{ fontSize: 16 }} />
-          </button>
+      <div className="header-container" style={{ paddingBottom: 0, flexDirection: 'column', alignItems: 'stretch' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, marginBottom: 16 }}>
+          <h1 className="header-title">Accounts</h1>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setIsEditMode(!isEditMode)}
+              className="icon-btn"
+              style={{ 
+                width: 40, height: 40, borderRadius: 12, 
+                color: isEditMode ? 'var(--bg)' : 'var(--text-1)', 
+                background: isEditMode ? 'var(--text-1)' : 'var(--surface-2)' 
+              }}
+            >
+              {isEditMode ? <i className="fa-solid fa-check" style={{ fontSize: 16 }} /> : <i className="fa-solid fa-pen" style={{ fontSize: 16 }} />}
+            </button>
+            <button
+              id="add-account-btn"
+              onClick={() => { setEditingAccount(null); setShowForm(true); }}
+              className="icon-btn"
+              style={{ width: 40, height: 40, borderRadius: 12 }}
+            >
+              <i className="fa-solid fa-plus" style={{ fontSize: 16 }} />
+            </button>
+          </div>
         </div>
 
-        {/* Net Worth Banner */}
-        <div
-          className="glass-card"
-          style={{ padding: '20px', background: 'var(--text-1)' }}
-        >
-          <p style={{ color: 'var(--bg)', opacity: 0.6, fontSize: 12, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 4 }}>
+        {/* Net Worth Seamless Text */}
+        <div style={{ marginBottom: 12 }}>
+          <p style={{ color: 'var(--text-3)', fontSize: 13, fontWeight: 500, marginBottom: 2 }}>
             Total Net Worth
           </p>
-          <p style={{ color: 'var(--bg)', fontSize: 34, fontWeight: 700, letterSpacing: -1 }}>
-            {formatPHP(netWorth)}
-          </p>
-          <p style={{ color: 'var(--bg)', opacity: 0.5, fontSize: 12, marginTop: 4 }}>
-            {activeAccounts.length} active account{activeAccounts.length !== 1 ? 's' : ''}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+            <p style={{ 
+              color: 'var(--text-1)', fontSize: 32, fontWeight: 700, letterSpacing: -1,
+              filter: balanceVisible ? 'none' : 'blur(12px)', transition: 'filter 0.3s ease'
+            }}>
+              {formatPHP(netWorth)}
+            </p>
+            <p style={{ color: 'var(--text-3)', fontSize: 12, fontWeight: 500 }}>
+              {activeAccounts.length} active account{activeAccounts.length !== 1 ? 's' : ''}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -264,8 +299,8 @@ export default function Accounts() {
                 style={{
                   width: '100%',
                   background: acc.color,
-                  borderRadius: 20,
-                  padding: '20px',
+                  borderRadius: 16,
+                  padding: '16px',
                   border: 'none',
                   cursor: 'pointer',
                   textAlign: 'left',
@@ -273,48 +308,65 @@ export default function Accounts() {
                 }}
                 className="active:scale-[0.97]"
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{
-                    width: 44, height: 44, borderRadius: 12,
+                    width: 38, height: 38, borderRadius: 10,
                     background: 'rgba(255,255,255,0.2)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginBottom: 24,
                   }}>
-                    <i className={`fa-solid ${acc.icon}`} style={{ color: '#fff', fontSize: 18 }} />
+                    <i className={`fa-solid ${acc.icon}`} style={{ color: '#fff', fontSize: 16 }} />
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setEditingAccount(acc); setShowForm(true); }}
-                      style={{
-                        width: 32, height: 32, borderRadius: 10,
-                        background: 'rgba(255,255,255,0.2)',
-                        border: 'none', color: '#fff',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <i className="fa-solid fa-pen" style={{ fontSize: 12 }} />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(acc); }}
-                      style={{
-                        width: 32, height: 32, borderRadius: 10,
-                        background: 'rgba(255,59,48,0.5)',
-                        border: 'none', color: '#fff',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <i className="fa-solid fa-trash" style={{ fontSize: 12 }} />
-                    </button>
-                  </div>
+                  
+                  {!isEditMode && (
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ color: '#fff', fontSize: 16, fontWeight: 700, letterSpacing: -0.5 }}>
+                        {acc.name}
+                      </p>
+                      <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {ACCOUNT_TYPES.find((t) => t.id === acc.type)?.label ?? acc.type}
+                      </p>
+                    </div>
+                  )}
+
+                  {isEditMode && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingAccount(acc); setShowForm(true); }}
+                        style={{
+                          width: 32, height: 32, borderRadius: 10,
+                          background: 'rgba(255,255,255,0.2)',
+                          border: 'none', color: '#fff',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <i className="fa-solid fa-pen" style={{ fontSize: 12 }} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(acc); }}
+                        style={{
+                          width: 32, height: 32, borderRadius: 10,
+                          background: 'var(--expense)',
+                          border: 'none', color: '#fff',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(255,59,48,0.4)',
+                        }}
+                      >
+                        <i className="fa-solid fa-trash" style={{ fontSize: 12 }} />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 500, marginBottom: 2 }}>
-                  {ACCOUNT_TYPES.find((t) => t.id === acc.type)?.label ?? acc.type}
-                </p>
-                <p style={{ color: '#fff', fontSize: 20, fontWeight: 700, letterSpacing: -0.5 }}>
-                  {acc.name}
-                </p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <p style={{ 
+                    color: '#fff', fontSize: 26, fontWeight: 800, letterSpacing: -1,
+                    filter: balanceVisible ? 'none' : 'blur(10px)', transition: 'filter 0.3s ease'
+                  }}>
+                    {formatPHP(getAccountBalance(acc.id, transactions))}
+                  </p>
+                </div>
                 {!acc.isActive && (
                   <span style={{
                     display: 'inline-block', marginTop: 8,
@@ -366,14 +418,14 @@ export default function Accounts() {
       {/* Delete Warning */}
       <ConfirmDialog
         isOpen={!!deleteTarget}
-        title="Account Has Transactions"
-        message={`"${deleteTarget?.name}" has existing transactions. Deleting it will also remove all associated transactions. This cannot be undone.`}
-        confirmLabel="Delete Anyway"
+        title="Delete Account?"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? If it has transactions, they will also be deleted. This cannot be undone.`}
+        confirmLabel="Delete Account"
         isDangerous
         onConfirm={() => {
           if (deleteTarget) {
             deleteAccount(deleteTarget.id);
-            showToast('Account and transactions deleted');
+            showToast('Account deleted');
           }
           setDeleteTarget(null);
         }}

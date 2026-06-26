@@ -147,24 +147,33 @@ export default function Analytics() {
   const isPositiveTrend = trendData[trendData.length - 1]?.balance >= 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
+    <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)', paddingBottom: 40 }}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 pt-6 pb-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Analytics</h1>
+      <div style={{ background: 'var(--bg)', borderBottom: '1px solid var(--divider)', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div className="header-container" style={{ background: 'transparent', paddingBottom: 12, position: 'relative' }}>
+          <h1 className="header-title">Analytics</h1>
+        </div>
 
         {/* Period Selector */}
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: 8, padding: '0 20px 16px' }}>
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               id={`analytics-period-${opt.id}`}
               onClick={() => setPeriod(opt.id)}
-              className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                period === opt.id
-                  ? 'text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-              }`}
-              style={period === opt.id ? { background: 'linear-gradient(135deg, #4F46E5, #2563EB)' } : {}}
+              style={{
+                flex: 1,
+                padding: '8px 0',
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 600,
+                border: period === opt.id ? 'none' : '1.5px solid var(--divider)',
+                background: period === opt.id ? 'var(--text-1)' : 'var(--surface-2)',
+                color: period === opt.id ? 'var(--bg)' : 'var(--text-3)',
+                transition: 'all 200ms ease',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
             >
               {opt.label}
             </button>
@@ -172,9 +181,9 @@ export default function Analytics() {
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-5">
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Summary Cards */}
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', gap: 12 }}>
           <StatCard label="Income"  amount={formatPHP(totalIncome)}  icon="fa-arrow-down"  variant="income"  />
           <StatCard label="Expense" amount={formatPHP(totalExpense)} icon="fa-arrow-up"    variant="expense" />
         </div>
@@ -188,68 +197,66 @@ export default function Analytics() {
 
         {/* Month-over-Month */}
         <div className="card">
-          <div className="flex items-center justify-between">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                vs Last Month (Spending)
-              </p>
-              <p className="text-lg font-bold text-slate-900 dark:text-white">
+              <p className="section-label">vs Last Month (Spending)</p>
+              <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)' }}>
                 {formatPHP(thisMonthExp)}
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>
                 Last month: {formatPHP(lastMonthExp)}
               </p>
             </div>
-            <div className={`flex flex-col items-end ${momChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
-              <i className={`fa-solid ${momChange > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'} text-2xl mb-1`} />
-              <span className="text-sm font-bold">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', color: momChange > 0 ? 'var(--expense)' : 'var(--income)' }}>
+              <i className={`fa-solid ${momChange > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}`} style={{ fontSize: 24, marginBottom: 4 }} />
+              <span style={{ fontSize: 14, fontWeight: 700 }}>
                 {momChange > 0 ? '+' : ''}{momChange.toFixed(1)}%
               </span>
             </div>
           </div>
         </div>
 
-        {/* Income vs Expense Bar Chart — gradient bars */}
+        {/* Income vs Expense Bar Chart */}
         <div className="card">
           <p className="section-label mb-3">Income vs Expenses</p>
           {barData.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-6">No data for this period</p>
+            <p style={{ fontSize: 13, color: 'var(--text-3)', textAlign: 'center', padding: '24px 0' }}>No data for this period</p>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={barData} barGap={3}>
                 <defs>
                   <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22C55E" />
-                    <stop offset="100%" stopColor="#15803D" />
+                    <stop offset="0%" stopColor="#34C759" />
+                    <stop offset="100%" stopColor="#28A745" />
                   </linearGradient>
                   <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F87171" />
-                    <stop offset="100%" stopColor="#DC2626" />
+                    <stop offset="0%" stopColor="#FF3B30" />
+                    <stop offset="100%" stopColor="#DC3545" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
                 <Tooltip content={<ChartTooltip />} />
                 <Bar dataKey="income"  fill="url(#incomeGrad)"  radius={[6,6,0,0]} name="income" />
                 <Bar dataKey="expense" fill="url(#expenseGrad)" radius={[6,6,0,0]} name="expense" />
               </BarChart>
             </ResponsiveContainer>
           )}
-          <div className="flex gap-4 mt-2 justify-center">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-green-600" /><span className="text-xs text-slate-500">Income</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-red-500" /><span className="text-xs text-slate-500">Expense</span></div>
+          <div style={{ display: 'flex', gap: 16, marginTop: 8, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--income)' }} /><span style={{ fontSize: 12, color: 'var(--text-3)' }}>Income</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--expense)' }} /><span style={{ fontSize: 12, color: 'var(--text-3)' }}>Expense</span></div>
           </div>
         </div>
 
-        {/* Spending by Category Donut — with interactive center label */}
+        {/* Spending by Category Donut */}
         <div className="card">
           <p className="section-label mb-3">Spending by Category</p>
           {catData.length === 0 ? (
             <EmptyState icon="fa-chart-pie" title="No Expense Data" description="Add some expenses to see your spending breakdown." />
           ) : (
             <>
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
@@ -268,11 +275,10 @@ export default function Analytics() {
                         />
                       ))}
                     </Pie>
-                    {/* Custom center label via recharts label prop workaround */}
-                    <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" fill="#94A3B8" fontSize={10} fontWeight={600}>
+                    <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" fill="var(--text-3)" fontSize={10} fontWeight={600}>
                       {donutCenterName}
                     </text>
-                    <text x="50%" y="56%" textAnchor="middle" dominantBaseline="middle" fill="#0F172A" fontSize={12} fontWeight={700}>
+                    <text x="50%" y="56%" textAnchor="middle" dominantBaseline="middle" fill="var(--text-1)" fontSize={12} fontWeight={700}>
                       {donutCenterValue > 0 ? `₱${(donutCenterValue / 100).toLocaleString('en-PH', { maximumFractionDigits: 0 })}` : '—'}
                     </text>
                     <Tooltip
@@ -281,27 +287,27 @@ export default function Analytics() {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="space-y-2.5 mt-1">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
                 {catData.map((cat, idx) => (
                   <div
                     key={idx}
-                    className={`flex items-center gap-2 transition-opacity duration-150 ${
-                      activeDonutIndex !== null && activeDonutIndex !== idx ? 'opacity-40' : 'opacity-100'
-                    }`}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      opacity: activeDonutIndex !== null && activeDonutIndex !== idx ? 0.4 : 1,
+                      transition: 'opacity 150ms ease',
+                    }}
                     onMouseEnter={() => setActiveDonutIndex(idx)}
                     onMouseLeave={() => setActiveDonutIndex(null)}
                   >
-                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                    <span className="text-xs text-slate-600 dark:text-slate-300 flex-1 truncate">{cat.name}</span>
-                    {/* Mini progress bar per category */}
-                    <div className="w-16 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
-                      />
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: 'var(--text-2)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {cat.name}
+                    </span>
+                    <div style={{ width: 64, height: 6, borderRadius: 99, background: 'var(--surface-3)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${cat.percentage}%`, background: cat.color, borderRadius: 99 }} />
                     </div>
-                    <span className="text-xs text-slate-400 w-9 text-right">{cat.percentage.toFixed(0)}%</span>
-                    <span className="text-xs font-semibold font-mono text-slate-700 dark:text-slate-200 w-16 text-right">
+                    <span style={{ fontSize: 12, color: 'var(--text-3)', width: 36, textAlign: 'right' }}>{cat.percentage.toFixed(0)}%</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)', width: 64, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                       {formatCompact(cat.value * 100)}
                     </span>
                   </div>
@@ -311,31 +317,31 @@ export default function Analytics() {
           )}
         </div>
 
-        {/* 30-Day Balance Trend — Area Chart */}
+        {/* 30-Day Balance Trend */}
         <div className="card">
           <p className="section-label mb-3">30-Day Net Worth Trend</p>
           <ResponsiveContainer width="100%" height={160}>
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={isPositiveTrend ? '#4F46E5' : '#EF4444'} stopOpacity={0.3} />
-                  <stop offset="100%" stopColor={isPositiveTrend ? '#4F46E5' : '#EF4444'} stopOpacity={0} />
+                  <stop offset="0%" stopColor={isPositiveTrend ? '#007AFF' : '#FF3B30'} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={isPositiveTrend ? '#007AFF' : '#FF3B30'} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#94A3B8' }} axisLine={false} tickLine={false}
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--divider)" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 9, fill: 'var(--text-3)' }} axisLine={false} tickLine={false}
                 interval={Math.floor(trendData.length / 5)} />
-              <YAxis tick={{ fontSize: 9, fill: '#94A3B8' }} axisLine={false} tickLine={false}
+              <YAxis tick={{ fontSize: 9, fill: 'var(--text-3)' }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
               <Tooltip formatter={(v: unknown) => [`₱${Number(v).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, 'Balance'] as [string, string]} />
               <Area
                 type="monotone"
                 dataKey="balance"
-                stroke={isPositiveTrend ? '#4F46E5' : '#EF4444'}
+                stroke={isPositiveTrend ? '#007AFF' : '#FF3B30'}
                 strokeWidth={2.5}
                 fill="url(#balanceGrad)"
                 dot={false}
-                activeDot={{ r: 5, fill: isPositiveTrend ? '#4F46E5' : '#EF4444', stroke: '#fff', strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: isPositiveTrend ? '#007AFF' : '#FF3B30', stroke: 'var(--surface)', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

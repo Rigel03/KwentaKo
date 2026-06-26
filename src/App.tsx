@@ -53,6 +53,8 @@ export default function App() {
     const ALL = ['dark', 'amoled', 'cozy'];
     root.classList.remove(...ALL);
 
+    let activeTheme = settings.theme;
+
     if (settings.theme === 'dark')   root.classList.add('dark');
     else if (settings.theme === 'amoled') root.classList.add('dark', 'amoled');
     else if (settings.theme === 'cozy')   root.classList.add('cozy');
@@ -60,15 +62,48 @@ export default function App() {
     else {
       // System
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      activeTheme = mq.matches ? 'dark' : 'light';
       if (mq.matches) root.classList.add('dark');
       const handler = (e: MediaQueryListEvent) => {
         root.classList.remove(...ALL);
         if (e.matches) root.classList.add('dark');
+        updateMetaThemeColor(e.matches ? 'dark' : 'light');
       };
       mq.addEventListener('change', handler);
+    }
+
+    updateMetaThemeColor(activeTheme);
+
+    function updateMetaThemeColor(t: string) {
+      const colors: Record<string, string> = {
+        light: '#F2F2F7',
+        dark: '#1C1C1E',
+        amoled: '#000000',
+        cozy: '#FDF8F5',
+      };
+      const metaThemeColors = document.querySelectorAll('meta[name="theme-color"]');
+      metaThemeColors.forEach(meta => {
+        meta.setAttribute('content', colors[t] || colors.light);
+      });
+    }
+
+    if (settings.theme === 'system') {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = (e: MediaQueryListEvent) => {
+        root.classList.remove(...ALL);
+        if (e.matches) root.classList.add('dark');
+        updateMetaThemeColor(e.matches ? 'dark' : 'light');
+      };
+      // Note: event listener is already added above, so we don't need to add it again.
+      // But we need to return the cleanup function.
       return () => mq.removeEventListener('change', handler);
     }
   }, [settings.theme]);
+
+  // ── Auto scroll to top on page change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
 
   const renderPage = () => {
     switch (page) {

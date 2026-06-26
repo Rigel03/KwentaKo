@@ -9,8 +9,8 @@ import type { ThemeMode } from '../types';
 
 const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string; bg: string; color: string }[] = [
   { id: 'light',  label: 'Light',  icon: 'fa-sun',                bg: '#F9F9F9', color: '#1C1C1E' },
-  { id: 'dark',   label: 'Dark',   icon: 'fa-moon',               bg: '#1C1C1E', color: '#F2F2F7' },
   { id: 'cozy',   label: 'Cozy',   icon: 'fa-mug-hot',            bg: '#F0EBE1', color: '#2C2A27' },
+  { id: 'dark',   label: 'Dark',   icon: 'fa-moon',               bg: '#1C1C1E', color: '#F2F2F7' },
   { id: 'amoled', label: 'AMOLED', icon: 'fa-circle',             bg: '#000000', color: '#F2F2F7' },
   { id: 'system', label: 'System', icon: 'fa-circle-half-stroke', bg: 'linear-gradient(135deg,#F9F9F9 50%,#1C1C1E 50%)', color: '#636366' },
 ];
@@ -133,8 +133,8 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
     <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)', paddingBottom: 40 }}>
 
       {/* Header */}
-      <div style={{ padding: '24px 20px 20px' }}>
-        <p className="page-title">Settings</p>
+      <div className="header-container">
+        <h1 className="header-title">Settings</h1>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -233,6 +233,40 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             sublabel={`${categories.length} categories`}
             onClick={onNavigateToCategories}
           />
+          
+          {/* Category Limit */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 16px', borderBottom: '1px solid var(--divider)'
+          }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="fa-solid fa-layer-group" style={{ fontSize: 14, color: 'var(--text-2)' }} />
+              </div>
+              <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-1)' }}>Visible Categories</p>
+            </div>
+            <select
+              value={settings.categoryLimit}
+              onChange={(e) => updateSettings({ categoryLimit: e.target.value === 'all' ? 'all' : Number(e.target.value) })}
+              style={{
+                background: 'var(--surface-2)',
+                color: 'var(--text-1)',
+                border: '1px solid var(--divider)',
+                borderRadius: 8,
+                padding: '6px 10px',
+                fontSize: 14,
+                fontFamily: 'inherit',
+                outline: 'none',
+              }}
+            >
+              <option value="4">4 Items</option>
+              <option value="8">8 Items</option>
+              <option value="12">12 Items</option>
+              <option value="16">16 Items</option>
+              <option value="all">Show All</option>
+            </select>
+          </div>
+
           <div style={{ borderBottom: 'none' }}>
             <Row
               icon="fa-arrow-right-from-bracket"

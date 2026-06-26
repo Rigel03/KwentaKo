@@ -8,13 +8,15 @@ export default function BudgetPage() {
   const transactions = useStore((s) => s.transactions);
   const categories   = useStore((s) => s.categories);
   const openAddSheet = useStore((s) => s.openAddSheet);
+  const budgets      = useStore((s) => s.budgets);
+  const addBudget    = useStore((s) => s.addBudget);
+  const settings     = useStore((s) => s.settings);
 
-  // Local budget state (persisted in component for now — can be wired to store later)
-  const [budgets, setBudgets]   = useState<Budget[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formCatId, setFormCatId] = useState('');
   const [formAmount, setFormAmount] = useState('');
-  const [formPeriod, setFormPeriod] = useState<'monthly' | 'weekly'>('monthly');
+  const [formPeriod, setFormPeriod] = useState<'monthly' | 'weekly' | 'daily'>('monthly');
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
 
   const thisMonthTxns = filterByPeriod(transactions, 'month');
@@ -42,10 +44,7 @@ export default function BudgetPage() {
       createdAt: new Date().toISOString(),
     };
 
-    setBudgets((prev) => {
-      const filtered = prev.filter((b) => b.categoryId !== formCatId);
-      return [...filtered, newBudget];
-    });
+    addBudget(newBudget);
 
     setShowForm(false);
     setFormCatId('');
@@ -59,9 +58,9 @@ export default function BudgetPage() {
     <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)' }}>
 
       {/* Header */}
-      <div className="pt-safe page-header pt-6">
+      <div className="header-container" style={{ alignItems: 'flex-start' }}>
         <div>
-          <p className="page-title">Budget</p>
+          <h1 className="header-title">Budget</h1>
           <p style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>
             This month's spending envelopes
           </p>
@@ -170,7 +169,7 @@ export default function BudgetPage() {
                           {cat?.name ?? 'Unknown'}
                         </p>
                         <p style={{ fontSize: 11, color: 'var(--text-3)' }}>
-                          {budget.period === 'monthly' ? 'Monthly' : 'Weekly'}
+                          {budget.period === 'monthly' ? 'Monthly' : budget.period === 'weekly' ? 'Weekly' : 'Daily'}
                         </p>
                       </div>
                     </div>
@@ -238,17 +237,81 @@ export default function BudgetPage() {
             <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-2)', marginBottom: 8 }}>
               Category
             </p>
-            <select
-              value={formCatId}
-              onChange={(e) => setFormCatId(e.target.value)}
-              className="input-field"
-              style={{ marginBottom: 16 }}
-            >
-              <option value="">Select a category…</option>
-              {expenseCategories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 16 }}>
+              {(() => {
+                const limit = settings.categoryLimit === 'all' ? expenseCategories.length : settings.categoryLimit;
+                const displayLimit = showAllCategories ? expenseCategories.length : (expenseCategories.length > limit ? limit - 1 : limit);
+                const filteredCats = expenseCategories.slice(0, displayLimit);
+                const hasMoreCats = !showAllCategories && expenseCategories.length > limit;
+
+                return (
+                  <>
+                    {filteredCats.map((c) => {
+                      const active = formCatId === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => setFormCatId(c.id)}
+                          style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                            padding: '10px 4px', borderRadius: 12,
+                            border: active ? `2px solid ${c.color}` : '2px solid transparent',
+                            background: active ? `${c.color}18` : 'var(--surface-2)',
+                            cursor: 'pointer', transition: 'all 0.2s',
+                          }}
+                        >
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8, background: `${c.color}22`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            <i className={`fa-solid ${c.icon}`} style={{ color: c.color, fontSize: 14 }} />
+                          </div>
+                          <span style={{ fontSize: 10, color: active ? c.color : 'var(--text-2)', fontWeight: active ? 700 : 500, textAlign: 'center', lineHeight: 1.2 }}>
+                            {c.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {hasMoreCats && (
+                      <button
+                        onClick={() => setShowAllCategories(true)}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                          padding: '10px 4px', borderRadius: 12, border: '2px solid transparent',
+                          background: 'var(--surface-2)', cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{
+                          width: 32, height: 32, borderRadius: 8, background: 'var(--surface-3)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          <i className="fa-solid fa-ellipsis" style={{ color: 'var(--text-2)', fontSize: 14 }} />
+                        </div>
+                        <span style={{ fontSize: 10, color: 'var(--text-2)', fontWeight: 500 }}>More</span>
+                      </button>
+                    )}
+                    {showAllCategories && expenseCategories.length > limit && (
+                      <button
+                        onClick={() => setShowAllCategories(false)}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                          padding: '10px 4px', borderRadius: 12, border: '2px solid transparent',
+                          background: 'var(--surface-2)', cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{
+                          width: 32, height: 32, borderRadius: 8, background: 'var(--surface-3)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          <i className="fa-solid fa-chevron-up" style={{ color: 'var(--text-2)', fontSize: 14 }} />
+                        </div>
+                        <span style={{ fontSize: 10, color: 'var(--text-2)', fontWeight: 500 }}>Less</span>
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
 
             <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-2)', marginBottom: 8 }}>
               Limit Amount (₱)
@@ -266,7 +329,7 @@ export default function BudgetPage() {
               Period
             </p>
             <div className="segment-control" style={{ marginBottom: 24 }}>
-              {(['monthly', 'weekly'] as const).map((p) => (
+              {(['monthly', 'weekly', 'daily'] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setFormPeriod(p)}

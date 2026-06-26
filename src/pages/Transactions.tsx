@@ -7,13 +7,6 @@ import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
 import type { TransactionType, Transaction } from '../types';
 
-const TYPE_FILTERS: { id: TransactionType | 'all'; label: string; icon: string }[] = [
-  { id: 'all',      label: 'All',      icon: 'fa-list' },
-  { id: 'income',   label: 'Income',   icon: 'fa-arrow-down' },
-  { id: 'expense',  label: 'Expense',  icon: 'fa-arrow-up' },
-  { id: 'transfer', label: 'Transfer', icon: 'fa-right-left' },
-];
-
 function dateHeader(dateStr: string): string {
   const d = parseISO(dateStr);
   if (isToday(d))     return 'Today';
@@ -25,13 +18,16 @@ export default function Transactions() {
   const transactions = useStore((s) => s.transactions);
   const openAddSheet = useStore((s) => s.openAddSheet);
 
-  const [typeFilter, setTypeFilter] = useState<TransactionType | 'all'>('all');
+  const accounts = useStore((s) => s.accounts).filter(a => a.isActive);
+  const balanceVisible = useStore((s) => s.balanceVisible);
+
+  const [accountFilter, setAccountFilter] = useState<string | 'all'>('all');
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
     return [...transactions]
       .filter((t) => {
-        if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+        if (accountFilter !== 'all' && t.accountId !== accountFilter && t.toAccountId !== accountFilter) return false;
         if (search.trim()) {
           const q = search.toLowerCase();
           return t.note?.toLowerCase().includes(q) ?? false;
@@ -39,7 +35,7 @@ export default function Transactions() {
         return true;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [transactions, typeFilter, search]);
+  }, [transactions, accountFilter, search]);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, Transaction[]>();
@@ -52,13 +48,17 @@ export default function Transactions() {
   }, [filtered]);
 
   return (
-    <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-screen pb-24 animate-fade-in" style={{ backgroundColor: 'var(--bg)' }}>
+      {/* ── Header ───────────────────────────────────────────────────────── */}
+      <div className="header-container">
+        <h1 className="header-title">Transactions</h1>
+      </div>
 
-      {/* ── Sticky Header ────────────────────────────────────────────── */}
+      {/* ── Sticky Search Header ────────────────────────────────────────────── */}
       <div
         style={{
           position: 'sticky',
-          top: 0,
+          top: 'calc(env(safe-area-inset-top) + 72px)', /* Below the header */
           zIndex: 20,
           backgroundColor: 'var(--nav-bg)',
           backdropFilter: 'blur(20px)',
@@ -67,7 +67,6 @@ export default function Transactions() {
           padding: '16px 20px 12px',
         }}
       >
-        <p className="page-title" style={{ marginBottom: 12 }}>History</p>
 
         {/* Search bar */}
         <div style={{ position: 'relative', marginBottom: 10 }}>
@@ -90,23 +89,27 @@ export default function Transactions() {
           />
         </div>
 
-        {/* Type filter tabs */}
-        <div style={{ display: 'flex', gap: 8 }}>
-          {TYPE_FILTERS.map((opt) => {
-            const active = typeFilter === opt.id;
-            const dotColor =
-              opt.id === 'income'   ? 'var(--income)'   :
-              opt.id === 'expense'  ? 'var(--expense)'  :
-              opt.id === 'transfer' ? 'var(--transfer)' : 'var(--text-1)';
+        {/* Account filter tabs */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="scrollbar-hide">
+          {[{ id: 'all', name: 'All Accounts', color: 'var(--text-1)' }, ...accounts].map((acc) => {
+            const active = accountFilter === acc.id;
+            
+            // Calculate balance if not 'all'
+            let bal = 0;
+            if (acc.id !== 'all') {
+              bal = transactions.filter(t => t.accountId === acc.id && t.type === 'income').reduce((s, t) => s + t.amount, 0)
+                  - transactions.filter(t => t.accountId === acc.id && t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            }
+
             return (
               <button
-                key={opt.id}
-                id={`filter-${opt.id}`}
-                onClick={() => setTypeFilter(opt.id)}
+                key={acc.id}
+                id={`filter-${acc.id}`}
+                onClick={() => setAccountFilter(acc.id)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 5,
+                  gap: 6,
                   padding: '6px 14px',
                   borderRadius: 99,
                   border: active ? 'none' : '1.5px solid var(--divider)',
@@ -117,17 +120,28 @@ export default function Transactions() {
                   cursor: 'pointer',
                   transition: 'all 200ms ease',
                   fontFamily: 'inherit',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                {!active && opt.id !== 'all' && (
+                {!active && acc.id !== 'all' && (
                   <span style={{
                     width: 7, height: 7,
                     borderRadius: '50%',
-                    backgroundColor: dotColor,
+                    backgroundColor: acc.color,
                     flexShrink: 0,
                   }} />
                 )}
-                {opt.label}
+                {acc.name}
+                {acc.id !== 'all' && (
+                  <span style={{ 
+                    opacity: active ? 0.8 : 0.6, 
+                    marginLeft: 4, 
+                    filter: balanceVisible ? 'none' : 'blur(4px)',
+                    transition: 'filter 0.3s ease'
+                  }}>
+                    {bal >= 0 ? '+' : '-'}{formatPHP(Math.abs(bal))}
+                  </span>
+                )}
               </button>
             );
           })}

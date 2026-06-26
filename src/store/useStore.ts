@@ -13,6 +13,7 @@ import type {
   AppSettings,
   ToastMessage,
   ThemeMode,
+  Budget,
 } from '../types';
 import { DEFAULT_ACCOUNTS, DEFAULT_CATEGORIES } from '../utils/seedData';
 import { supabase } from '../lib/supabase';
@@ -24,6 +25,7 @@ interface KwentaKoStore {
   accounts: Account[];
   transactions: Transaction[];
   categories: Category[];
+  budgets: Budget[];
   settings: AppSettings;
   userId: string | null;
 
@@ -31,6 +33,9 @@ interface KwentaKoStore {
   toasts: ToastMessage[];
   isAddSheetOpen: boolean;
   editingTransactionId: string | null;
+  balanceVisible: boolean;
+
+  toggleBalanceVisibility: () => void;
 
   // ── Account Actions
   addAccount: (account: Account) => void;
@@ -49,6 +54,10 @@ interface KwentaKoStore {
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
   reorderCategory: (sourceIndex: number, destinationIndex: number) => void;
+
+  // ── Budget Actions
+  addBudget: (budget: Budget) => void;
+  deleteBudget: (id: string) => void;
 
   // ── Settings Actions
   updateSettings: (updates: Partial<AppSettings>) => void;
@@ -70,24 +79,29 @@ interface KwentaKoStore {
 
 export const useStore = create<KwentaKoStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // ── Initial Data
       accounts: DEFAULT_ACCOUNTS,
       transactions: [],
       categories: DEFAULT_CATEGORIES,
+      budgets: [],
       settings: {
         theme: 'system',
         currency: 'PHP',
         defaultAccountId: 'acc-cash',
         analyticsDefaultPeriod: 'month',
         hasSeededData: false,
+        categoryLimit: 8,
       },
 
       // ── UI State (reset on each load)
       toasts: [],
       isAddSheetOpen: false,
       editingTransactionId: null,
+      balanceVisible: true,
       userId: null,
+
+      toggleBalanceVisibility: () => set((s) => ({ balanceVisible: !s.balanceVisible })),
 
       // ── Account Actions
       addAccount: (account) => {
@@ -241,6 +255,17 @@ export const useStore = create<KwentaKoStore>()(
         });
       },
 
+      // ── Budget Actions
+      addBudget: (budget) => {
+        set((s) => {
+          const filtered = s.budgets.filter((b) => b.categoryId !== budget.categoryId);
+          return { budgets: [...filtered, budget] };
+        });
+      },
+      deleteBudget: (id) => {
+        set((s) => ({ budgets: s.budgets.filter((b) => b.id !== id) }));
+      },
+
       // ── Settings Actions
       updateSettings: (updates) => {
         set((s) => {
@@ -283,6 +308,7 @@ export const useStore = create<KwentaKoStore>()(
             defaultAccountId: null,
             analyticsDefaultPeriod: 'month',
             hasSeededData: false,
+            categoryLimit: 8,
           },
         });
         // We do not auto-clear the Supabase tables here to prevent accidental total data loss,
@@ -331,7 +357,8 @@ export const useStore = create<KwentaKoStore>()(
             stateUpdates.settings = {
               theme: p.theme, currency: p.currency, defaultAccountId: p.default_account_id,
               analyticsDefaultPeriod: p.analytics_default_period, hasSeededData: p.has_seeded_data,
-              userName: p.user_name
+              userName: p.user_name,
+              categoryLimit: get().settings.categoryLimit
             };
           }
 
@@ -372,7 +399,9 @@ export const useStore = create<KwentaKoStore>()(
         accounts: s.accounts,
         transactions: s.transactions,
         categories: s.categories,
+        budgets: s.budgets,
         settings: s.settings,
+        balanceVisible: s.balanceVisible,
       }),
     },
   ),

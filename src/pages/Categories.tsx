@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
 import { useStore } from '../store/useStore';
@@ -6,10 +7,17 @@ import EmptyState from '../components/ui/EmptyState';
 import type { Category, CategoryType } from '../types';
 
 const PRESET_COLORS = [
+  // Primary
   '#2563EB', '#16A34A', '#EF4444', '#F97316', '#EAB308',
   '#8B5CF6', '#EC4899', '#0891B2', '#7C3AED', '#14B8A6',
-  '#94A3B8', '#1E3A8A', '#DC2626', '#15803D', '#D97706',
-  '#9333EA', '#DB2777', '#0284C7', '#6D28D9', '#0F766E',
+  // Darker
+  '#1e3a8a', '#14532d', '#7f1d1d', '#7c2d12', '#713f12',
+  '#4c1d95', '#831843', '#164e63', '#4c1d95', '#134e4a',
+  // Lighter
+  '#93c5fd', '#86efac', '#fca5a5', '#fdba74', '#fde047',
+  '#c4b5fd', '#f9a8d4', '#67e8f9', '#c4b5fd', '#5eead4',
+  // Grays
+  '#94A3B8', '#1e293b'
 ];
 
 // 100+ Font Awesome Free icons grouped by category
@@ -124,33 +132,37 @@ function CategoryActionMenu({
   onDelete: () => void;
   onCancel: () => void;
 }) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full rounded-t-3xl p-5 space-y-3 animate-slide-up pb-8 bg-white dark:bg-slate-900">
-        <h3 className="text-center font-bold mb-2 text-lg text-slate-900 dark:text-white">{category.name}</h3>
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onCancel} />
+      <div className="relative w-full max-w-sm rounded-3xl p-6 space-y-3 animate-fade-in" style={{ background: 'var(--surface)' }}>
+        <h3 className="text-center font-bold mb-4 text-lg" style={{ color: 'var(--text-1)' }}>{category.name}</h3>
         <button
           onClick={onModify}
-          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white"
+          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95"
+          style={{ background: 'var(--surface-2)', color: 'var(--text-1)' }}
         >
-          <i className="fa-solid fa-pen mr-2" /> Modify Category
+          Modify Category
         </button>
         {!category.isDefault && (
           <button
             onClick={onDelete}
-            className="w-full py-4 rounded-xl font-bold text-red-500 bg-red-500/10 transition-all active:scale-95"
+            className="w-full py-4 rounded-xl font-bold transition-all active:scale-95"
+            style={{ color: 'var(--expense)', background: 'rgba(255,59,48,0.1)' }}
           >
             <i className="fa-solid fa-trash mr-2" /> Delete Category
           </button>
         )}
         <button
           onClick={onCancel}
-          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95 mt-2 text-slate-500 dark:text-slate-400"
+          className="w-full py-4 rounded-xl font-bold transition-all active:scale-95 mt-2"
+          style={{ color: 'var(--text-3)' }}
         >
           Cancel
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -169,6 +181,8 @@ function CategoryForm({
   const [color,      setColor]      = useState(initial?.color  ?? '#2563EB');
   const [iconSearch, setIconSearch] = useState('');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
+  const [showMoreColors, setShowMoreColors] = useState(false);
+  const visibleColors = showMoreColors ? PRESET_COLORS : PRESET_COLORS.slice(0, 10);
 
   const displayIcons = (() => {
     if (iconSearch.trim()) {
@@ -182,21 +196,22 @@ function CategoryForm({
 
   const valid = name.trim().length > 0;
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onCancel} />
       <div
-        className="relative w-full rounded-t-3xl p-5 space-y-4 animate-slide-up overflow-y-auto bg-white dark:bg-slate-900"
-        style={{ maxHeight: '92svh' }}
+        className="relative w-full max-w-md rounded-3xl p-5 space-y-4 animate-fade-in overflow-y-auto"
+        style={{ maxHeight: '85svh', background: 'var(--surface)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          <h3 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>
             {initial ? 'Edit Category' : 'New Category'}
           </h3>
           <button
             onClick={onCancel}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+            className="w-8 h-8 flex items-center justify-center rounded-full"
+            style={{ background: 'var(--surface-2)', color: 'var(--text-3)' }}
           >
             <i className="fa-solid fa-xmark text-sm" />
           </button>
@@ -222,12 +237,11 @@ function CategoryForm({
               <button
                 key={opt.id}
                 onClick={() => setType(opt.id)}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  type === opt.id
-                    ? 'text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                }`}
-                style={type === opt.id ? { background: opt.color } : undefined}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+                style={{
+                  background: type === opt.id ? opt.color : 'var(--surface-2)',
+                  color: type === opt.id ? '#fff' : 'var(--text-3)',
+                }}
               >
                 {opt.label}
               </button>
@@ -241,7 +255,8 @@ function CategoryForm({
           {/* Search */}
           <div className="relative mb-2">
             <i
-              className="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500"
+              className="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-xs"
+              style={{ color: 'var(--text-3)' }}
             />
             <input
               value={iconSearch}
@@ -256,11 +271,11 @@ function CategoryForm({
             <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide">
               <button
                 onClick={() => setActiveGroup(null)}
-                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                  activeGroup === null
-                    ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                }`}
+                className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all"
+                style={{
+                  background: activeGroup === null ? 'var(--text-1)' : 'var(--surface-2)',
+                  color: activeGroup === null ? 'var(--bg)' : 'var(--text-3)',
+                }}
               >
                 All
               </button>
@@ -268,11 +283,11 @@ function CategoryForm({
                 <button
                   key={g.group}
                   onClick={() => setActiveGroup(g.group === activeGroup ? null : g.group)}
-                  className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                    activeGroup === g.group
-                      ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                  }`}
+                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all"
+                  style={{
+                    background: activeGroup === g.group ? 'var(--text-1)' : 'var(--surface-2)',
+                    color: activeGroup === g.group ? 'var(--bg)' : 'var(--text-3)',
+                  }}
                 >
                   {g.group}
                 </button>
@@ -282,7 +297,7 @@ function CategoryForm({
 
           {/* Icon grid */}
           <div
-            className="grid grid-cols-6 gap-1.5 overflow-y-auto"
+            className="grid grid-cols-6 gap-2 overflow-y-auto p-1"
             style={{ maxHeight: 180 }}
           >
             {displayIcons.map((ic) => (
@@ -290,20 +305,19 @@ function CategoryForm({
                 key={ic}
                 onClick={() => setIcon(ic)}
                 title={ic.replace('fa-', '')}
-                className={`aspect-square rounded-xl flex items-center justify-center text-base transition-all ${
-                  icon === ic ? 'text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                }`}
-                style={
-                  icon === ic
-                    ? { background: color, boxShadow: `0 0 0 2px ${color}` }
-                    : undefined
-                }
+                className="aspect-square rounded-xl flex items-center justify-center text-base transition-all"
+                style={{
+                  background: icon === ic ? color : 'var(--surface-2)',
+                  color: icon === ic ? '#fff' : 'var(--text-3)',
+                  outline: icon === ic ? `2px solid ${color}` : 'none',
+                  outlineOffset: 2,
+                }}
               >
                 <i className={`fa-solid ${ic}`} />
               </button>
             ))}
             {displayIcons.length === 0 && (
-              <p className="col-span-6 text-center text-xs py-4 text-slate-400 dark:text-slate-500">
+              <p className="col-span-6 text-center text-xs py-4" style={{ color: 'var(--text-3)' }}>
                 No icons found
               </p>
             )}
@@ -312,26 +326,40 @@ function CategoryForm({
 
         {/* Color */}
         <div>
-          <p className="section-label">Color</p>
-          <div className="flex gap-2 flex-wrap">
-            {PRESET_COLORS.map((c) => (
+          <div className="flex items-center justify-between mb-2">
+            <p className="section-label mb-0">Color</p>
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
+            {visibleColors.map((c) => (
               <button
                 key={c}
                 onClick={() => setColor(c)}
-                className="w-9 h-9 rounded-xl transition-transform"
+                className="w-9 h-9 rounded-xl transition-all"
                 style={{
                   backgroundColor: c,
-                  transform:   color === c ? 'scale(1.15)' : 'scale(1)',
-                  boxShadow:   color === c ? `0 0 0 2px var(--surface), 0 0 0 4px ${c}` : 'none',
+                  outline: color === c ? `2px solid ${c}` : 'none',
+                  outlineOffset: 2,
                 }}
                 aria-label={`Color ${c}`}
               />
             ))}
+
+            {!showMoreColors && (
+              <button
+                onClick={() => setShowMoreColors(true)}
+                className="w-9 h-9 rounded-xl transition-all flex items-center justify-center"
+                style={{
+                  background: 'var(--surface-2)', color: 'var(--text-1)',
+                }}
+              >
+                <i className="fa-solid fa-ellipsis text-sm" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Preview */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--surface-2)' }}>
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ backgroundColor: `${color}20` }}
@@ -339,26 +367,43 @@ function CategoryForm({
             <i className={`fa-solid ${icon}`} style={{ color }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
               {name || 'Category Name'}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
               {TYPE_OPTIONS.find((t) => t.id === type)?.label}
             </p>
           </div>
         </div>
 
-        <button
-          onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: false, isActive: true })}
-          disabled={!valid}
-          className="btn-primary"
-        >
-          {initial ? 'Save Changes' : 'Add Category'}
-        </button>
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-4 rounded-xl font-bold transition-transform active:scale-95"
+            style={{ background: 'var(--surface-2)', color: 'var(--text-3)' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => valid && onSave({ name: name.trim(), type, icon, color, isDefault: initial?.isDefault ?? false, isActive: true })}
+            disabled={!valid}
+            className="flex-1 py-4 rounded-xl font-bold text-white transition-all active:scale-95 shadow-lg"
+            style={{
+              background: 'var(--text-1)',
+              color: 'var(--bg)',
+              opacity: valid ? 1 : 0.4,
+              boxShadow: valid ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            {initial ? 'Save Changes' : 'Create Category'}
+          </button>
+        </div>
+
       </div>
-    </div>
+    </div>,
+    document.body
   );
-}
+};
 
 export default function Categories() {
   const { categories, addCategory, updateCategory, deleteCategory, reorderCategory, showToast } = useStore();
@@ -366,6 +411,10 @@ export default function Categories() {
   const [editingCat,  setEditingCat]  = useState<Category | null>(null);
   const [actionMenuCat, setActionMenuCat] = useState<Category | null>(null);
   const [filterType,  setFilterType]  = useState<CategoryType | 'all'>('all');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const filtered = categories
     .filter((c) => filterType === 'all' || c.type === filterType)
@@ -401,17 +450,16 @@ export default function Categories() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
+    <div className="min-h-screen pb-20 animate-fade-in" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <div className="px-4 pt-6 pb-4 sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Categories
-          </h1>
+      <div className="sticky top-0 z-10 border-b" style={{ background: 'var(--surface)', borderColor: 'var(--divider)' }}>
+        <div className="header-container" style={{ background: 'transparent' }}>
+          <h1 className="header-title">Categories</h1>
           <button
             id="add-category-btn"
             onClick={() => { setEditingCat(null); setShowForm(true); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors bg-indigo-600 text-white"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors"
+            style={{ background: 'var(--transfer)', color: '#fff' }}
           >
             <i className="fa-solid fa-plus text-xs" />
             Add
@@ -419,16 +467,17 @@ export default function Categories() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 px-4 pb-3">
           {(['all', 'expense', 'income', 'both'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${
-                filterType === t
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-              }`}
+              className="flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors"
+              style={{
+                background: filterType === t ? 'var(--text-1)' : 'var(--surface-2)',
+                color: filterType === t ? 'var(--bg)' : 'var(--text-3)',
+                boxShadow: filterType === t ? 'var(--shadow-sm)' : 'none',
+              }}
             >
               {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
@@ -465,10 +514,14 @@ export default function Categories() {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`flex items-center gap-3 p-3 rounded-2xl transition-shadow bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 ${
-                            snapshot.isDragging ? 'shadow-xl z-50 ring-2 ring-indigo-500' : ''
-                          }`}
-                          style={provided.draggableProps.style}
+                          className="flex items-center gap-3 p-3 rounded-2xl transition-shadow"
+                          style={{
+                            background: 'var(--surface)',
+                            boxShadow: snapshot.isDragging ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
+                            border: '1px solid var(--divider)',
+                            zIndex: snapshot.isDragging ? 50 : 'auto',
+                            ...provided.draggableProps.style,
+                          }}
                         >
                           <button
                             className="flex items-center gap-3 flex-1 text-left"
@@ -481,10 +534,10 @@ export default function Categories() {
                               <i className={`fa-solid ${cat.icon} text-sm`} style={{ color: cat.color }} />
                             </div>
                             <div className="flex-1">
-                              <p className="font-semibold text-slate-900 dark:text-white">
+                              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>
                                 {cat.name}
                               </p>
-                              <p className="text-xs capitalize text-slate-500 dark:text-slate-400">
+                              <p className="text-xs capitalize" style={{ color: 'var(--text-3)' }}>
                                 {cat.type}
                               </p>
                             </div>
@@ -492,7 +545,8 @@ export default function Categories() {
 
                           <div
                             {...provided.dragHandleProps}
-                            className={`p-2 shrink-0 text-slate-400 dark:text-slate-500 ${filterType !== 'all' ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                            className={`p-2 shrink-0 ${filterType !== 'all' ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                            style={{ color: 'var(--text-3)' }}
                           >
                             <i className="fa-solid fa-bars text-lg" />
                           </div>

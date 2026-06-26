@@ -65,6 +65,7 @@ export interface AppSettings {
   defaultAccountId: string | null;
   analyticsDefaultPeriod: AnalyticsPeriod;
   hasSeededData: boolean;
+  categoryLimit: number | 'all';
   userName?: string;
 }
 
@@ -74,7 +75,7 @@ export interface Budget {
   id: string;
   categoryId: string;
   amount: number;       // centavos
-  period: 'monthly' | 'weekly';
+  period: 'monthly' | 'weekly' | 'daily';
   createdAt: string;
 }
 

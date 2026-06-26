@@ -40,7 +40,7 @@ export default function EmptyState({
         <button
           onClick={onAction}
           className="mt-6 px-6 py-3 text-sm font-semibold rounded-xl transition-opacity active:opacity-80"
-          style={{ background: 'var(--accent)', color: '#fff' }}
+          style={{ background: 'var(--accent)', color: 'var(--bg)' }}
         >
           {actionLabel}
         </button>

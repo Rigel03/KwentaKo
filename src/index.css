@@ -654,3 +654,34 @@ body {
   background: var(--divider);
   margin: 0;
 }
+
+/* ─── Global Page Headers & Safe Areas ───────────────────────────────────── */
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 24px);
+}
+
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 24px);
+}
+
+.header-container {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: max(env(safe-area-inset-top), 24px);
+  padding-bottom: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-1);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
