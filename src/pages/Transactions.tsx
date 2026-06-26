@@ -5,7 +5,7 @@ import { getPeriodSummary } from '../utils/calculations';
 import { formatPHP } from '../utils/currency';
 import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
-import type { TransactionType, Transaction } from '../types';
+import type { Transaction } from '../types';
 
 function dateHeader(dateStr: string): string {
   const d = parseISO(dateStr);

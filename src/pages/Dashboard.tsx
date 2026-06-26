@@ -69,12 +69,6 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
 
   const periodTxns = filterByPeriod(transactions, period);
   const { totalIncome, totalExpense } = getPeriodSummary(periodTxns);
-  const net = totalIncome - totalExpense;
-
-  const spendRatio = totalIncome > 0 ? Math.min((totalExpense / totalIncome) * 100, 100) : 0;
-  const spendColor =
-    spendRatio < 60  ? 'var(--income)' :
-    spendRatio < 85  ? '#FF9F0A'       : 'var(--expense)';
 
   const recentTxns = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
