@@ -82,20 +82,19 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
       {/* ── Top Bar ─────────────────────────────────────────────────────── */}
       <div className="pt-safe px-5 pt-4 flex items-center justify-between mb-2">
         <div>
+          <p style={{ color: 'var(--text-1)', fontSize: 18, fontWeight: 700, marginBottom: 4, letterSpacing: '-0.3px' }}>
+            {GREETING(settings.userName)} 👋
+          </p>
           <div style={{
             display: 'inline-block',
             backgroundColor: 'var(--surface-3)',
             padding: '2px 8px',
             borderRadius: '12px',
-            marginBottom: 4,
           }}>
             <p style={{ color: 'var(--text-3)', fontSize: 12, fontWeight: 600 }}>
               {getFunPhrase(today)} | {format(today, 'MMMM d, yyyy')}
             </p>
           </div>
-          <p style={{ color: 'var(--text-1)', fontSize: 18, fontWeight: 700, marginTop: 1, letterSpacing: '-0.3px' }}>
-            {GREETING(settings.userName)} 👋
-          </p>
         </div>
         <button
           onClick={cycleTheme}
@@ -134,32 +133,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
         </p>
       </div>
 
-      {/* ── Quick Actions ────────────────────────────────────────────────── */}
-      <div className="px-5 mb-5">
-        <div className="flex gap-3">
-          {[
-            { label: 'Income',   icon: 'fa-arrow-down',  color: 'var(--income)',   bg: 'rgba(52,199,89,0.12)'  },
-            { label: 'Expense',  icon: 'fa-arrow-up',    color: 'var(--expense)',  bg: 'rgba(255,59,48,0.12)'  },
-            { label: 'Transfer', icon: 'fa-right-left',  color: 'var(--transfer)', bg: 'rgba(0,122,255,0.12)'  },
-          ].map((q) => (
-            <button
-              key={q.label}
-              onClick={() => openAddSheet()}
-              className="quick-action"
-            >
-              <div
-                className="quick-action-icon"
-                style={{ backgroundColor: q.bg, color: q.color }}
-              >
-                <i className={`fa-solid ${q.icon}`} style={{ fontSize: 18 }} />
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)' }}>
-                {q.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       {/* ── Account Cards ────────────────────────────────────────────────── */}
       <div className="mb-5">
