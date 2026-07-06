@@ -125,7 +125,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
             aria-label={balanceVisible ? 'Hide balance' : 'Show balance'}
             style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
           >
-            <i className={`fa-solid ${balanceVisible ? 'fa-eye-slash' : 'fa-eye'}`} style={{ fontSize: 16 }} />
+            <i className={`fa-solid ${balanceVisible ? 'fa-eye' : 'fa-eye-slash'}`} style={{ fontSize: 16 }} />
           </button>
         </div>
         <p style={{ color: 'var(--text-3)', fontSize: 12, marginTop: 4 }}>
