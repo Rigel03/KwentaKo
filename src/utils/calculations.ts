@@ -12,7 +12,7 @@ import {
   parseISO, isWithinInterval,
   format, subDays,
 } from 'date-fns';
-import type { Transaction, Account, PeriodFilter } from '../types';
+import type { Transaction, Account, PeriodFilter, Budget } from '../types';
 
 // ─── Balance Calculations ─────────────────────────────────────────────────────
 
@@ -101,6 +101,32 @@ export function getPeriodSummary(transactions: Transaction[]): PeriodSummary {
     if (t.type === 'expense') totalExpense += t.amount;
   }
   return { totalIncome, totalExpense, net: totalIncome - totalExpense };
+}
+
+// ─── Budget Progress ──────────────────────────────────────────────────────────
+
+/**
+ * Compute the total spent for a specific budget based on its category and strict date window.
+ */
+export function getBudgetSpentAmount(
+  budget: Budget,
+  transactions: Transaction[]
+): number {
+  if (!budget.startDate || !budget.endDate) return 0; // Guard for legacy budgets
+  
+  const start = parseISO(budget.startDate);
+  const end = parseISO(budget.endDate);
+  
+  let spent = 0;
+  for (const t of transactions) {
+    if (t.type === 'expense' && t.categoryId === budget.categoryId) {
+      const txDate = parseISO(t.date);
+      if (txDate >= start && txDate <= end) {
+        spent += t.amount;
+      }
+    }
+  }
+  return spent;
 }
 
 // ─── Category Breakdown ───────────────────────────────────────────────────────

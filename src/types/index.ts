@@ -76,6 +76,8 @@ export interface Budget {
   categoryId: string;
   amount: number;       // centavos
   period: 'monthly' | 'weekly' | 'daily';
+  startDate: string;    // ISO string
+  endDate: string;      // ISO string
   createdAt: string;
 }
 

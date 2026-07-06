@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { filterByPeriod } from '../utils/calculations';
+import { getBudgetSpentAmount } from '../utils/calculations';
 import { formatPHP } from '../utils/currency';
 import type { Budget } from '../types';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 
 export default function BudgetPage() {
   const transactions = useStore((s) => s.transactions);
@@ -11,37 +12,53 @@ export default function BudgetPage() {
   const budgets      = useStore((s) => s.budgets);
   const addBudget    = useStore((s) => s.addBudget);
   const settings     = useStore((s) => s.settings);
+  const showToast    = useStore((s) => s.showToast);
 
   const [showForm, setShowForm] = useState(false);
   const [formCatId, setFormCatId] = useState('');
   const [formAmount, setFormAmount] = useState('');
   const [formPeriod, setFormPeriod] = useState<'monthly' | 'weekly' | 'daily'>('monthly');
   const [showAllCategories, setShowAllCategories] = useState(false);
-
-
-  const thisMonthTxns = filterByPeriod(transactions, 'month');
-
   const expenseCategories = categories.filter(
     (c) => c.isActive && (c.type === 'expense' || c.type === 'both'),
   );
 
-  // Spending per category this month
-  const spentByCat = (catId: string): number =>
-    thisMonthTxns
-      .filter((t) => t.type === 'expense' && t.categoryId === catId)
-      .reduce((s, t) => s + t.amount, 0);
-
   const handleAddBudget = () => {
     if (!formCatId || !formAmount) return;
+    
+    // Strict Scoping: Check if a budget already exists for this category
+    const exists = budgets.some((b) => b.categoryId === formCatId);
+    if (exists) {
+      showToast('A budget already exists for this category. Please delete it first.', 'error');
+      return;
+    }
+
     const amountCentavos = Math.round(parseFloat(formAmount) * 100);
     if (isNaN(amountCentavos) || amountCentavos <= 0) return;
+
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    if (formPeriod === 'daily') {
+      startDate = startOfDay(now);
+      endDate = endOfDay(now);
+    } else if (formPeriod === 'weekly') {
+      startDate = startOfWeek(now, { weekStartsOn: 1 });
+      endDate = endOfWeek(now, { weekStartsOn: 1 });
+    } else {
+      startDate = startOfMonth(now);
+      endDate = endOfMonth(now);
+    }
 
     const newBudget: Budget = {
       id: `budget-${Date.now()}`,
       categoryId: formCatId,
       amount: amountCentavos,
       period: formPeriod,
-      createdAt: new Date().toISOString(),
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      createdAt: now.toISOString(),
     };
 
     addBudget(newBudget);
@@ -52,7 +69,7 @@ export default function BudgetPage() {
   };
 
   const totalBudgeted = budgets.reduce((s, b) => s + b.amount, 0);
-  const totalSpent    = budgets.reduce((s, b) => s + spentByCat(b.categoryId), 0);
+  const totalSpent    = budgets.reduce((s, b) => s + getBudgetSpentAmount(b, transactions), 0);
 
   return (
     <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)' }}>
@@ -142,7 +159,7 @@ export default function BudgetPage() {
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             {budgets.map((budget, i) => {
               const cat      = categories.find((c) => c.id === budget.categoryId);
-              const spent    = spentByCat(budget.categoryId);
+              const spent    = getBudgetSpentAmount(budget, transactions);
               const pct      = budget.amount > 0 ? Math.min((spent / budget.amount) * 100, 100) : 0;
               const over     = spent > budget.amount;
               const barColor = over ? 'var(--expense)' : pct > 80 ? '#FF9F0A' : 'var(--income)';

@@ -258,8 +258,12 @@ export const useStore = create<KwentaKoStore>()(
       // ── Budget Actions
       addBudget: (budget) => {
         set((s) => {
-          const filtered = s.budgets.filter((b) => b.categoryId !== budget.categoryId);
-          return { budgets: [...filtered, budget] };
+          const exists = s.budgets.some((b) => b.categoryId === budget.categoryId);
+          if (exists) {
+            // Error handled by component, but we enforce state integrity here
+            return s;
+          }
+          return { budgets: [...s.budgets, budget] };
         });
       },
       deleteBudget: (id) => {

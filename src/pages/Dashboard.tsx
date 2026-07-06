@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { useStore } from '../store/useStore';
-import { getNetWorth, filterByPeriod, getPeriodSummary, getAccountBalance } from '../utils/calculations';
+import { getNetWorth, filterByPeriod, getPeriodSummary, getAccountBalance, getBudgetSpentAmount } from '../utils/calculations';
 import { formatPHP } from '../utils/currency';
 import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
@@ -264,7 +264,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
             <div className="flex flex-col gap-3">
               {budgets.slice(0, 3).map((b) => {
                 const cat = categories.find(c => c.id === b.categoryId);
-                const spent = periodTxns.filter(t => t.categoryId === b.categoryId && t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+                const spent = getBudgetSpentAmount(b, transactions);
                 const ratio = Math.min((spent / b.amount) * 100, 100);
                 const color = ratio < 70 ? 'var(--income)' : ratio < 90 ? '#FF9F0A' : 'var(--expense)';
                 return (
