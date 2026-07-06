@@ -112,6 +112,7 @@ export default function App() {
           <Dashboard
             onNavigateToTransactions={() => setPage('transactions')}
             onNavigateToAccounts={() => setPage('accounts')}
+            onNavigateToBudget={() => setPage('budget')}
           />
         );
       case 'transactions': return <Transactions />;
