@@ -34,6 +34,7 @@ interface KwentaKoStore {
   isAddSheetOpen: boolean;
   editingTransactionId: string | null;
   balanceVisible: boolean;
+  prefillCategoryId: string | null;
 
   toggleBalanceVisibility: () => void;
 
@@ -57,6 +58,7 @@ interface KwentaKoStore {
 
   // ── Budget Actions
   addBudget: (budget: Budget) => void;
+  updateBudget: (id: string, updates: Partial<Budget>) => void;
   deleteBudget: (id: string) => void;
 
   // ── Settings Actions
@@ -70,7 +72,7 @@ interface KwentaKoStore {
   // ── UI Actions
   showToast: (message: string, type?: ToastMessage['type']) => void;
   dismissToast: (id: string) => void;
-  openAddSheet: (editId?: string) => void;
+  openAddSheet: (editId?: string, prefillCategoryId?: string) => void;
   closeAddSheet: () => void;
   setUserId: (id: string | null) => void;
 }
@@ -99,6 +101,7 @@ export const useStore = create<KwentaKoStore>()(
       isAddSheetOpen: false,
       editingTransactionId: null,
       balanceVisible: true,
+      prefillCategoryId: null,
       userId: null,
 
       toggleBalanceVisibility: () => set((s) => ({ balanceVisible: !s.balanceVisible })),
@@ -266,6 +269,11 @@ export const useStore = create<KwentaKoStore>()(
           return { budgets: [...s.budgets, budget] };
         });
       },
+      updateBudget: (id, updates) => {
+        set((s) => ({
+          budgets: s.budgets.map((b) => b.id === id ? { ...b, ...updates } : b),
+        }));
+      },
       deleteBudget: (id) => {
         set((s) => ({ budgets: s.budgets.filter((b) => b.id !== id) }));
       },
@@ -387,11 +395,11 @@ export const useStore = create<KwentaKoStore>()(
         set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 
       // ── Add Sheet UI
-      openAddSheet: (editId) =>
-        set({ isAddSheetOpen: true, editingTransactionId: editId ?? null }),
+      openAddSheet: (editId, prefillCatId) =>
+        set({ isAddSheetOpen: true, editingTransactionId: editId ?? null, prefillCategoryId: prefillCatId ?? null }),
 
       closeAddSheet: () =>
-        set({ isAddSheetOpen: false, editingTransactionId: null }),
+        set({ isAddSheetOpen: false, editingTransactionId: null, prefillCategoryId: null }),
 
       setUserId: (userId) => set({ userId }),
     }),

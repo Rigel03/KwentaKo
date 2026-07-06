@@ -16,7 +16,7 @@ export default function AddEntrySheet() {
   const {
     accounts, transactions, categories, settings,
     addTransaction, updateTransaction, deleteTransaction, deleteTransactionPair,
-    closeAddSheet, showToast, editingTransactionId,
+    closeAddSheet, showToast, editingTransactionId, prefillCategoryId,
   } = useStore();
 
   const editingTxn = editingTransactionId
@@ -32,7 +32,7 @@ export default function AddEntrySheet() {
   const [toAccountId,  setToAccountId]  = useState(
     editingTxn?.toAccountId ?? accounts.find((a) => a.isActive && a.id !== accountId)?.id ?? '',
   );
-  const [categoryId,   setCategoryId]   = useState(editingTxn?.categoryId ?? '');
+  const [categoryId,   setCategoryId]   = useState(editingTxn?.categoryId ?? prefillCategoryId ?? '');
   const [note,         setNote]         = useState(editingTxn?.note ?? '');
   const [date,         setDate]         = useState(editingTxn ? parseISO(editingTxn.date) : new Date());
   const [showDeleteConfirm,         setShowDeleteConfirm]         = useState(false);
@@ -275,8 +275,24 @@ export default function AddEntrySheet() {
 
             {/* Category */}
             <div>
-              <p className="section-label">Category</p>
+              <p className="section-label">Category{prefillCategoryId ? ' — Locked to Budget' : ''}</p>
+              {prefillCategoryId ? (
+                /* Locked single-category display when opened from a budget card */
+                (() => {
+                  const lockedCat = categories.find(c => c.id === prefillCategoryId);
+                  return lockedCat ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 14, background: `${lockedCat.color}14`, border: `1.5px solid ${lockedCat.color}60` }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: `${lockedCat.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className={`fa-solid ${lockedCat.icon}`} style={{ color: lockedCat.color, fontSize: 15 }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: lockedCat.color }}>{lockedCat.name}</span>
+                      <i className="fa-solid fa-lock" style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 'auto' }} />
+                    </div>
+                  ) : null;
+                })()
+              ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+
                 {filteredCats.map((cat) => {
                   const active = categoryId === cat.id;
                   return (
@@ -350,6 +366,7 @@ export default function AddEntrySheet() {
                   </button>
                 )}
               </div>
+              )}
             </div>
 
             {/* Date & Time (Native Pickers) */}

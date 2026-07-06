@@ -55,15 +55,17 @@ export default function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
         })}
       </nav>
 
-      {/* FAB — Add Entry */}
-      <button
-        id="fab-add-entry"
-        aria-label="Add new entry"
-        onClick={() => openAddSheet()}
-        className="fab animate-fab-breathe"
-      >
-        <i className="fa-solid fa-plus" />
-      </button>
+      {/* FAB — Add Entry (hidden on Budget tab to avoid confusion) */}
+      {currentPage !== 'budget' && (
+        <button
+          id="fab-add-entry"
+          aria-label="Add new entry"
+          onClick={() => openAddSheet()}
+          className="fab animate-fab-breathe"
+        >
+          <i className="fa-solid fa-plus" />
+        </button>
+      )}
     </>
   );
 }
