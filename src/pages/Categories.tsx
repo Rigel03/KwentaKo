@@ -546,7 +546,7 @@ export default function Categories() {
                           <div
                             {...provided.dragHandleProps}
                             className={`p-2 shrink-0 ${filterType !== 'all' ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                            style={{ color: 'var(--text-3)' }}
+                            style={{ color: 'var(--text-3)', touchAction: 'none' }}
                           >
                             <i className="fa-solid fa-bars text-lg" />
                           </div>
