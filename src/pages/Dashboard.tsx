@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { useStore } from '../store/useStore';
-import { getNetWorth, filterByPeriod, getPeriodSummary } from '../utils/calculations';
+import { getNetWorth, filterByPeriod, getPeriodSummary, getAccountBalance } from '../utils/calculations';
 import { formatPHP } from '../utils/currency';
 import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
@@ -199,11 +199,7 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
                   color: '#fff', fontSize: 20, fontWeight: 700, letterSpacing: -0.5, marginTop: 2,
                   filter: balanceVisible ? 'none' : 'blur(8px)', transition: 'filter 0.3s ease', userSelect: 'none'
                 }}>
-                  {formatPHP(acc.type === 'cash'
-                    ? transactions.filter(t => t.accountId === acc.id && t.type === 'income').reduce((s, t) => s + t.amount, 0)
-                    - transactions.filter(t => t.accountId === acc.id && t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-                    : 0
-                  )}
+                  {formatPHP(getAccountBalance(acc.id, transactions))}
                 </p>
               </button>
             ))}
