@@ -73,11 +73,13 @@ export interface AppSettings {
 
 export interface Budget {
   id: string;
+  title: string;           // user-defined label
   categoryId: string;
-  amount: number;       // centavos
-  period: 'monthly' | 'weekly' | 'daily';
-  startDate: string;    // ISO string
-  endDate: string;      // ISO string
+  amount: number;          // centavos
+  period: 'monthly' | 'weekly' | 'daily' | 'custom';
+  startDate: string;       // ISO string
+  endDate: string;         // ISO string
+  isRecurring: boolean;    // false = one-time / custom; true = daily|weekly|monthly
   createdAt: string;
 }
 
