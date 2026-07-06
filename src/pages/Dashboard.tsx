@@ -43,9 +43,10 @@ const getFunPhrase = (d: Date) => {
 interface DashboardProps {
   onNavigateToTransactions: () => void;
   onNavigateToAccounts: () => void;
+  onNavigateToBudget: () => void;
 }
 
-export default function Dashboard({ onNavigateToTransactions, onNavigateToAccounts }: DashboardProps) {
+export default function Dashboard({ onNavigateToTransactions, onNavigateToAccounts, onNavigateToBudget }: DashboardProps) {
   const [period, setPeriod]           = useState<PeriodFilter>('month');
 
   const accounts     = useStore((s) => s.accounts);
@@ -263,8 +264,17 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
 
         {/* Current Budgets */}
         {budgets.length > 0 && (
-          <div className="card" style={{ padding: 14 }}>
-            <p className="section-label" style={{ marginBottom: 12 }}>Current Budgets</p>
+          <div
+            className="card"
+            style={{ padding: 14, cursor: 'pointer' }}
+            onClick={onNavigateToBudget}
+          >
+            <div className="flex justify-between items-center" style={{ marginBottom: 12 }}>
+              <p className="section-label" style={{ marginBottom: 0 }}>Current Budgets</p>
+              <span style={{ fontSize: 12, color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                See all <i className="fa-solid fa-chevron-right" style={{ fontSize: 10 }} />
+              </span>
+            </div>
             <div className="flex flex-col gap-3">
               {budgets.slice(0, 3).map((b) => {
                 const cat = categories.find(c => c.id === b.categoryId);
