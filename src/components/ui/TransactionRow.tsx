@@ -16,6 +16,7 @@ export default function TransactionRow({
 }: TransactionRowProps) {
   const categories   = useStore((s) => s.categories);
   const accounts     = useStore((s) => s.accounts);
+  const budgets      = useStore((s) => s.budgets);
   const openAddSheet = useStore((s) => s.openAddSheet);
 
   const category  = categories.find((c) => c.id === transaction.categoryId);
@@ -26,6 +27,7 @@ export default function TransactionRow({
 
   const isIncome   = transaction.type === 'income';
   const isTransfer = transaction.type === 'transfer';
+  const isExpense  = transaction.type === 'expense';
 
   const amountColor = isIncome
     ? 'var(--income)'
@@ -36,6 +38,16 @@ export default function TransactionRow({
   const amountPrefix = isIncome ? '+' : isTransfer ? '' : '-';
   const catColor = category?.color ?? (isIncome ? '#34C759' : isTransfer ? '#007AFF' : '#FF3B30');
   const timeStr  = format(parseISO(transaction.date), 'h:mm a');
+
+  // Check if expense falls into a budget
+  const relatedBudget = isExpense ? budgets.find((b) => {
+    if (b.categoryId !== transaction.categoryId) return false;
+    if (!b.startDate || !b.endDate) return false;
+    const txDate = parseISO(transaction.date);
+    const start = parseISO(b.startDate);
+    const end = parseISO(b.endDate);
+    return txDate >= start && txDate <= end;
+  }) : null;
 
   return (
     <button
@@ -66,17 +78,34 @@ export default function TransactionRow({
         }}>
           {category?.name ?? 'Unknown'}
         </p>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 2 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 2, flexWrap: 'nowrap', overflow: 'hidden' }}>
           {showAccount && (
-            <span style={{ fontSize: 12, color: 'var(--text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>
               {isTransfer
                 ? `${account?.name ?? '?'} → ${toAccount?.name ?? '?'}`
                 : account?.name ?? '?'}
             </span>
           )}
+          {relatedBudget && (
+            <span style={{ 
+              fontSize: 10, 
+              color: 'var(--text-2)', 
+              background: 'var(--surface-2)', 
+              padding: '1px 5px', 
+              borderRadius: 4,
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 3,
+              flexShrink: 0
+            }}>
+              <i className="fa-solid fa-lock" style={{ fontSize: 8 }} />
+              {relatedBudget.title}
+            </span>
+          )}
           {transaction.note && (
             <span style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {showAccount && '· '}{transaction.note}
+              {(showAccount || relatedBudget) && '· '}{transaction.note}
             </span>
           )}
         </div>
