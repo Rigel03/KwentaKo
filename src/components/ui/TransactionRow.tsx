@@ -58,11 +58,14 @@ export default function TransactionRow({
       {/* Category Icon */}
       <div
         className="txn-icon flex-shrink-0"
-        style={{ backgroundColor: `${catColor}18` }}
+        style={relatedBudget 
+          ? { backgroundColor: catColor }
+          : { backgroundColor: `${catColor}18` }
+        }
       >
         <i
           className={`fa-solid ${category?.icon ?? 'fa-circle-question'}`}
-          style={{ color: catColor, fontSize: 15 }}
+          style={{ color: relatedBudget ? '#fff' : catColor, fontSize: 15 }}
         />
       </div>
 

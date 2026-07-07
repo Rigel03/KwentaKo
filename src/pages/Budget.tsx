@@ -5,6 +5,7 @@ import { formatPHP } from '../utils/currency';
 import type { Budget } from '../types';
 import BudgetExpenseModal from '../components/modals/BudgetExpenseModal';
 import BudgetFormModal from '../components/modals/BudgetFormModal';
+import TransactionRow from '../components/ui/TransactionRow';
 import { useState } from 'react';
 
 // ─── Date window display (text-only, no emoji) ────────────────────────────────
@@ -38,6 +39,16 @@ function BudgetCard({ budget, archived, onAddExpense, onEdit, onDelete }: CardPr
   const transactions = useStore((s) => s.transactions);
   const categories   = useStore((s) => s.categories);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+
+  const budgetTxns = transactions.filter((t) => {
+    if (t.type !== 'expense' || t.categoryId !== budget.categoryId) return false;
+    if (!budget.startDate || !budget.endDate) return false;
+    const txDate = parseISO(t.date);
+    const start = parseISO(budget.startDate);
+    const end = parseISO(budget.endDate);
+    return txDate >= start && txDate <= end;
+  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const cat       = categories.find((c) => c.id === budget.categoryId);
   const spent     = getBudgetSpentAmount(budget, transactions);
@@ -165,6 +176,7 @@ function BudgetCard({ budget, archived, onAddExpense, onEdit, onDelete }: CardPr
       </div>
 
       {/* Add Expense button (hidden on archived) */}
+      {/* Add Expense button (hidden on archived) */}
       {!archived && (
         <div style={{ borderTop: '1px solid var(--divider)', padding: '10px 16px' }}>
           <button
@@ -183,6 +195,32 @@ function BudgetCard({ budget, archived, onAddExpense, onEdit, onDelete }: CardPr
             <i className="fa-solid fa-plus" style={{ fontSize: 11 }} />
             Add Expense to {budget.title}
           </button>
+        </div>
+      )}
+
+      {/* Show Logs Toggle */}
+      {budgetTxns.length > 0 && (
+        <div style={{ borderTop: '1px solid var(--divider)' }}>
+          <button
+            onClick={() => setShowLogs(!showLogs)}
+            style={{
+              width: '100%', padding: '12px 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: 'var(--text-2)', fontSize: 13, fontWeight: 500, fontFamily: 'inherit',
+            }}
+          >
+            <i className={`fa-solid fa-chevron-${showLogs ? 'up' : 'down'}`} style={{ fontSize: 11 }} />
+            {showLogs ? 'Hide Logs' : `View Logs (${budgetTxns.length})`}
+          </button>
+          
+          {showLogs && (
+            <div style={{ padding: '0 0 10px', display: 'flex', flexDirection: 'column' }}>
+              {budgetTxns.map((txn) => (
+                <TransactionRow key={txn.id} transaction={txn} showAccount={false} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
