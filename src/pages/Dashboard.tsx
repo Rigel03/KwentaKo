@@ -47,7 +47,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onNavigateToTransactions, onNavigateToAccounts, onNavigateToBudget }: DashboardProps) {
-  const [period, setPeriod]           = useState<PeriodFilter>('month');
+  const [period, setPeriod]           = useState<PeriodFilter>('today');
 
   const accounts     = useStore((s) => s.accounts);
   const transactions = useStore((s) => s.transactions);
