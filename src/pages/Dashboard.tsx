@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { format } from 'date-fns';
 import { useStore } from '../store/useStore';
 import { getNetWorth, filterByPeriod, getPeriodSummary, getBudgetSpentAmount } from '../utils/calculations';
 import { formatPHP } from '../utils/currency';
 import TransactionRow from '../components/ui/TransactionRow';
 import EmptyState from '../components/ui/EmptyState';
+import InsightCard from '../components/ui/InsightCard';
 import type { PeriodFilter, ThemeMode } from '../types';
 
 const THEME_CYCLE: ThemeMode[] = ['light', 'dark', 'cozy', 'amoled'];
@@ -47,7 +48,8 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onNavigateToTransactions, onNavigateToAccounts, onNavigateToBudget }: DashboardProps) {
-  const [period, setPeriod]           = useState<PeriodFilter>('today');
+  const [period, setPeriod] = useState<PeriodFilter>('today');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const accounts     = useStore((s) => s.accounts);
   const transactions = useStore((s) => s.transactions);
@@ -58,6 +60,17 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
   const toggleBalanceVisibility = useStore((s) => s.toggleBalanceVisibility);
   const budgets      = useStore((s) => s.budgets);
   const categories   = useStore((s) => s.categories);
+
+  // Pull-to-refresh
+  const touchStartY = useRef(0);
+  const handlePTRStart = (e: React.TouchEvent) => { touchStartY.current = e.touches[0].clientY; };
+  const handlePTREnd = useCallback(async (e: React.TouchEvent) => {
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (dy > 80 && !isRefreshing && window.scrollY < 10) {
+      setIsRefreshing(true);
+      try { await useStore.getState().initSync(); } finally { setIsRefreshing(false); }
+    }
+  }, [isRefreshing]);
 
   const cycleTheme = () => {
     const idx  = THEME_CYCLE.indexOf(settings.theme as ThemeMode);
@@ -78,7 +91,19 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
   const today = new Date();
 
   return (
-    <div className="min-h-screen animate-fade-in" style={{ backgroundColor: 'var(--bg)' }}>
+    <div
+      className="min-h-screen animate-fade-in"
+      style={{ backgroundColor: 'var(--bg)' }}
+      onTouchStart={handlePTRStart}
+      onTouchEnd={handlePTREnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      {isRefreshing && (
+        <div style={{ textAlign: 'center', padding: '12px 0', color: 'var(--text-3)', fontSize: 12 }}>
+          <i className="fa-solid fa-circle-notch fa-spin" style={{ marginRight: 6 }} />
+          Syncing...
+        </div>
+      )}
 
       {/* ── Top Bar ─────────────────────────────────────────────────────── */}
       <div className="pt-safe px-5 pt-4 flex items-center justify-between mb-2">
@@ -299,6 +324,11 @@ export default function Dashboard({ onNavigateToTransactions, onNavigateToAccoun
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── Spending Insight Card ────────────────────────────────────────── */}
+      <div className="px-5 mb-5">
+        <InsightCard />
       </div>
 
       {/* ── Recent Transactions ──────────────────────────────────────────── */}

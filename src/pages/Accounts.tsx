@@ -6,7 +6,8 @@ import { formatPHP } from '../utils/currency';
 import EmptyState from '../components/ui/EmptyState';
 import TransactionRow from '../components/ui/TransactionRow';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import type { Account, AccountType } from '../types';
+import type { Account, AccountType, CurrencyCode } from '../types';
+import { CURRENCY_SYMBOLS } from '../types';
 
 const ACCOUNT_TYPES: { id: AccountType; label: string; icon: string }[] = [
   { id: 'cash',         label: 'Cash',         icon: 'fa-money-bill-wave'       },
@@ -39,9 +40,10 @@ function AccountForm({
   onSave: (a: Omit<Account, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
 }) {
-  const [name,  setName]  = useState(initial?.name  ?? '');
-  const [type,  setType]  = useState<AccountType>(initial?.type  ?? 'cash');
-  const [color, setColor] = useState(initial?.color ?? '#007AFF');
+  const [name,     setName]     = useState(initial?.name     ?? '');
+  const [type,     setType]     = useState<AccountType>(initial?.type  ?? 'cash');
+  const [color,    setColor]    = useState(initial?.color    ?? '#007AFF');
+  const [currency, setCurrency] = useState<CurrencyCode>(initial?.currency ?? 'PHP');
   const [showMoreColors, setShowMoreColors] = useState(false);
   const icon  = ACCOUNT_TYPES.find((t) => t.id === type)?.icon ?? 'fa-circle-question';
   const valid = name.trim().length > 0;
@@ -139,6 +141,25 @@ function AccountForm({
           ))}
         </div>
 
+        {/* Currency */}
+        <div style={{ marginBottom: 16 }}>
+          <p className="section-label">Currency</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {(Object.keys(CURRENCY_SYMBOLS) as CurrencyCode[]).map((cc) => (
+              <button
+                key={cc}
+                onClick={() => setCurrency(cc)}
+                style={{
+                  padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                  background: currency === cc ? 'var(--text-1)' : 'var(--surface-2)',
+                  color: currency === cc ? 'var(--bg)' : 'var(--text-2)',
+                }}
+              >{CURRENCY_SYMBOLS[cc]} {cc}</button>
+            ))}
+          </div>
+        </div>
+
         {/* Color */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <p className="section-label" style={{ marginBottom: 0 }}>Color</p>
@@ -178,7 +199,7 @@ function AccountForm({
         </div>
 
         <button
-          onClick={() => valid && onSave({ name: name.trim(), type, currency: 'PHP', icon, color, isActive: true })}
+          onClick={() => valid && onSave({ name: name.trim(), type, currency, icon, color, isActive: true })}
           disabled={!valid}
           className="btn-primary"
           style={{ opacity: valid ? 1 : 0.4 }}
@@ -322,8 +343,13 @@ export default function Accounts() {
                       <p style={{ color: '#fff', fontSize: 16, fontWeight: 700, letterSpacing: -0.5 }}>
                         {acc.name}
                       </p>
-                      <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: 4 }}>
                         {ACCOUNT_TYPES.find((t) => t.id === acc.type)?.label ?? acc.type}
+                        {acc.currency && acc.currency !== 'PHP' && (
+                          <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 6, padding: '1px 5px', fontSize: 10, fontWeight: 700 }}>
+                            {acc.currency}
+                          </span>
+                        )}
                       </p>
                     </div>
                   )}

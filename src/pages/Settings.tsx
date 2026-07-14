@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { exportTransactionsCSV, downloadCSV } from '../utils/csv';
+import { exportTransactionsCSV, downloadCSV, exportTransactionsXLSX } from '../utils/csv';
 import { exportBackupJSON, importBackupJSON } from '../utils/backup';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
@@ -18,6 +18,7 @@ const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string; bg: string; c
 interface SettingsProps {
   onNavigateToAccounts: () => void;
   onNavigateToCategories: () => void;
+  onNavigateToRecurring: () => void;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -92,7 +93,7 @@ function Row({
   );
 }
 
-export default function Settings({ onNavigateToAccounts, onNavigateToCategories }: SettingsProps) {
+export default function Settings({ onNavigateToAccounts, onNavigateToCategories, onNavigateToRecurring }: SettingsProps) {
   const { settings, updateSettings, setTheme, accounts, transactions, categories, clearAllData, showToast } = useStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -102,7 +103,14 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
     const csv      = exportTransactionsCSV(transactions, accounts, categories);
     const filename = `kwentako_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
     downloadCSV(csv, filename);
-    showToast('Export downloaded ✓');
+    showToast('CSV export downloaded ✓');
+  };
+
+  const handleExportXLSX = () => {
+    const filename = `kwentako_export_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`;
+    exportTransactionsXLSX(transactions, accounts, categories, filename)
+      .then(() => showToast('Excel export downloaded ✓'))
+      .catch(() => showToast('Export failed', 'error'));
   };
 
   const handleBackupJSON = () => {
@@ -233,6 +241,11 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             sublabel={`${categories.length} categories`}
             onClick={onNavigateToCategories}
           />
+          <Row
+            icon="fa-rotate" label="Recurring Transactions"
+            sublabel="Automate repeating entries"
+            onClick={onNavigateToRecurring}
+          />
           
           {/* Category Limit */}
           <div style={{
@@ -295,6 +308,11 @@ export default function Settings({ onNavigateToAccounts, onNavigateToCategories 
             icon="fa-file-csv" label="Export CSV"
             sublabel={`${transactions.length} transactions`}
             onClick={handleExportCSV}
+          />
+          <Row
+            icon="fa-file-excel" label="Export Excel"
+            sublabel="Download as .xlsx spreadsheet"
+            onClick={handleExportXLSX}
           />
           <div style={{ borderBottom: 'none' }}>
             <Row

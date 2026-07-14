@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { evaluateExpression } from '../../utils/currency';
+import { vibrateSuccess } from '../../utils/haptic';
 import NumPad from './NumPad';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import type { TransactionType } from '../../types';
@@ -109,6 +110,7 @@ export default function AddEntrySheet() {
       });
       showToast(type === 'income' ? 'Income logged ✓' : 'Expense logged ✓');
     }
+    vibrateSuccess();
     closeAddSheet();
   };
 

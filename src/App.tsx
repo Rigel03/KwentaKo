@@ -11,9 +11,10 @@ import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Categories from './pages/Categories';
 import Budget from './pages/Budget';
+import Recurring from './pages/Recurring';
 
 export default function App() {
-  const [page, setPage] = useState<Page | 'categories'>('dashboard');
+  const [page, setPage] = useState<Page | 'categories' | 'recurring'>('dashboard');
   const [authInitialized, setAuthInitialized] = useState(false);
   const settings = useStore((s) => s.settings);
   const userId = useUserId();
@@ -25,6 +26,7 @@ export default function App() {
       setUserId(session?.user?.id ?? null);
       if (session?.user?.id) {
         useStore.getState().initSync();
+        useStore.getState().applyDueRecurrings();
         
         // Auto-fill Google Name
         const googleName = session.user.user_metadata?.full_name;
@@ -35,16 +37,37 @@ export default function App() {
       }
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleSession(session);
+    // OFFLINE BYPASS: If we already have a userId cached and we're offline,
+    // skip the network auth check and show the app immediately.
+    const cachedUserId = useStore.getState().userId;
+    if (!navigator.onLine && cachedUserId) {
       setAuthInitialized(true);
-    });
+      useStore.getState().applyDueRecurrings();
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        handleSession(session);
+        setAuthInitialized(true);
+      }).catch(() => {
+        // Network failure: fall back to cached userId
+        if (cachedUserId) setAuthInitialized(true);
+        else setAuthInitialized(true); // show login screen
+      });
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       handleSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    // When we come back online, flush any pending mutations
+    const handleOnline = () => {
+      useStore.getState().flushOfflineQueue();
+    };
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('online', handleOnline);
+    };
   }, [setUserId]);
 
   // ── Dark mode effect
@@ -124,15 +147,17 @@ export default function App() {
           <Settings
             onNavigateToAccounts={() => setPage('accounts')}
             onNavigateToCategories={() => setPage('categories')}
+            onNavigateToRecurring={() => setPage('recurring')}
           />
         );
       case 'categories':   return <Categories />;
+      case 'recurring':    return <Recurring />;
       default:             return null;
     }
   };
 
   // Map categories back to settings for nav highlighting
-  const navPage: Page = page === 'categories' ? 'settings' : page as Page;
+  const navPage: Page = (page === 'categories' || page === 'recurring') ? 'settings' : page as Page;
 
   if (!authInitialized) {
     return (

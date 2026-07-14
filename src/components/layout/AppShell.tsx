@@ -2,6 +2,8 @@ import React from 'react';
 import { useStore } from '../../store/useStore';
 import Toast from '../ui/Toast';
 import AddEntrySheet from '../modals/AddEntrySheet';
+import OfflineBanner from '../ui/OfflineBanner';
+
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -16,8 +18,10 @@ export default function AppShell({ children }: AppShellProps) {
       className="min-h-screen"
       style={{ backgroundColor: 'var(--bg)', color: 'var(--text-1)' }}
     >
+      <OfflineBanner />
       {/* Main scrollable content */}
       <div className="app-container">
+
         {children}
       </div>
 

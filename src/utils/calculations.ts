@@ -230,3 +230,64 @@ export function getAccountBalanceHistory(
   }
   return points;
 }
+
+// \u2500\u2500\u2500 Weekly Insights \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+import type { Category } from '../types';
+
+export interface WeeklyInsight {
+  topCategory: Category | null;
+  topCategoryAmount: number;    // centavos
+  weekOverWeekPct: number | null;
+  message: string;
+}
+
+export function getWeeklyInsights(
+  transactions: Transaction[],
+  categories: Category[],
+): WeeklyInsight | null {
+  const now = new Date();
+  const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+  const thisWeekEnd   = endOfWeek(now,   { weekStartsOn: 1 });
+  const lastWeekStart = startOfWeek(new Date(thisWeekStart.getTime() - 1), { weekStartsOn: 1 });
+  const lastWeekEnd   = endOfWeek(new Date(thisWeekStart.getTime() - 1),   { weekStartsOn: 1 });
+
+  const thisWeekExp = transactions.filter(
+    (t) => t.type === 'expense' && isWithinInterval(parseISO(t.date), { start: thisWeekStart, end: thisWeekEnd }),
+  );
+  const lastWeekExp = transactions.filter(
+    (t) => t.type === 'expense' && isWithinInterval(parseISO(t.date), { start: lastWeekStart, end: lastWeekEnd }),
+  );
+
+  const thisTotal = thisWeekExp.reduce((s, t) => s + t.amount, 0);
+  const lastTotal = lastWeekExp.reduce((s, t) => s + t.amount, 0);
+
+  // Top category this week
+  const catMap = new Map<string, number>();
+  for (const t of thisWeekExp) {
+    catMap.set(t.categoryId, (catMap.get(t.categoryId) ?? 0) + t.amount);
+  }
+  const topEntry = Array.from(catMap.entries()).sort((a, b) => b[1] - a[1])[0];
+  const topCategory = topEntry ? categories.find((c) => c.id === topEntry[0]) ?? null : null;
+  const topCategoryAmount = topEntry ? topEntry[1] : 0;
+
+  // Week-over-week %
+  const weekOverWeekPct = lastTotal > 0
+    ? ((thisTotal - lastTotal) / lastTotal) * 100
+    : thisTotal > 0 ? 100 : null;
+
+  // Message
+  let message = '';
+  if (thisTotal === 0) {
+    message = 'Great start \u2014 no expenses logged yet this week!';
+  } else if (weekOverWeekPct !== null && weekOverWeekPct > 20) {
+    message = 'Spending is up compared to last week. Keep an eye on it!';
+  } else if (weekOverWeekPct !== null && weekOverWeekPct < -10) {
+    message = 'You are spending less than last week. Keep it up!';
+  } else if (topCategory) {
+    message = topCategory.name + ' is your biggest expense category this week.';
+  }
+
+  return { topCategory, topCategoryAmount, weekOverWeekPct, message };
+}
+

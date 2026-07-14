@@ -51,3 +51,44 @@ export function downloadCSV(content: string, filename: string) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// \u2500\u2500\u2500 XLSX EXPORT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+export async function exportTransactionsXLSX(
+  transactions: Transaction[],
+  accounts: Account[],
+  categories: Category[],
+  filename: string,
+): Promise<void> {
+  // Dynamic import so xlsx is not in the critical bundle
+  const XLSX = await import('xlsx');
+
+  const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+
+  const rows = transactions
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map((t) => ({
+      Date: format(parseISO(t.date), 'yyyy-MM-dd'),
+      Time: format(parseISO(t.date), 'HH:mm'),
+      Type: t.type.charAt(0).toUpperCase() + t.type.slice(1),
+      'Amount (PHP)': t.amount / 100,
+      Account: accountMap.get(t.accountId) ?? t.accountId,
+      'To Account': t.toAccountId ? (accountMap.get(t.toAccountId) ?? t.toAccountId) : '',
+      Category: categoryMap.get(t.categoryId) ?? t.categoryId,
+      Note: t.note ?? '',
+      ID: t.id,
+    }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Set column widths
+  ws['!cols'] = [
+    { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 14 },
+    { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 30 }, { wch: 36 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+  XLSX.writeFile(wb, filename);
+}
+

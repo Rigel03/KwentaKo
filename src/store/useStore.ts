@@ -6,6 +6,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { addDays, addWeeks, addMonths, parseISO, isBefore, startOfDay, format } from 'date-fns';
 import type {
   Account,
   Transaction,
@@ -14,6 +15,8 @@ import type {
   ToastMessage,
   ThemeMode,
   Budget,
+  PendingMutation,
+  RecurringTransaction,
 } from '../types';
 import { DEFAULT_ACCOUNTS, DEFAULT_CATEGORIES } from '../utils/seedData';
 import { supabase } from '../lib/supabase';
@@ -26,8 +29,10 @@ interface KwentaKoStore {
   transactions: Transaction[];
   categories: Category[];
   budgets: Budget[];
+  recurrings: RecurringTransaction[];
   settings: AppSettings;
   userId: string | null;
+  offlineQueue: PendingMutation[];
 
   // ── UI State (NOT persisted)
   toasts: ToastMessage[];
@@ -61,6 +66,12 @@ interface KwentaKoStore {
   updateBudget: (id: string, updates: Partial<Budget>) => void;
   deleteBudget: (id: string) => void;
 
+  // ── Recurring Actions
+  addRecurring: (r: RecurringTransaction) => void;
+  updateRecurring: (id: string, updates: Partial<RecurringTransaction>) => void;
+  deleteRecurring: (id: string) => void;
+  applyDueRecurrings: () => void;
+
   // ── Settings Actions
   updateSettings: (updates: Partial<AppSettings>) => void;
   setTheme: (theme: ThemeMode) => void;
@@ -68,6 +79,9 @@ interface KwentaKoStore {
   
   // ── Cloud Sync
   initSync: () => Promise<void>;
+  flushOfflineQueue: () => Promise<void>;
+  _queueMutation: (op: string, payload: Record<string, unknown>) => void;
+
 
   // ── UI Actions
   showToast: (message: string, type?: ToastMessage['type']) => void;
@@ -87,6 +101,8 @@ export const useStore = create<KwentaKoStore>()(
       transactions: [],
       categories: DEFAULT_CATEGORIES,
       budgets: [],
+      recurrings: [],
+      offlineQueue: [],
       settings: {
         theme: 'system',
         currency: 'PHP',
@@ -109,6 +125,10 @@ export const useStore = create<KwentaKoStore>()(
       // ── Account Actions
       addAccount: (account) => {
         set((s) => ({ accounts: [...s.accounts, account] }));
+        if (!navigator.onLine) {
+          get()._queueMutation('add_account', { account });
+          return;
+        }
         supabase.from('accounts').insert({
           client_id: account.id,
           name: account.name,
@@ -127,7 +147,7 @@ export const useStore = create<KwentaKoStore>()(
             a.id === id ? { ...a, ...updates } : a,
           ),
         }));
-        // We need to map camelCase updates to snake_case for Supabase
+        if (!navigator.onLine) { get()._queueMutation('update_account', { id, updates }); return; }
         const payload: any = { ...updates };
         if ('isActive' in payload) { payload.is_active = payload.isActive; delete payload.isActive; }
         if ('createdAt' in payload) { payload.created_at = payload.createdAt; delete payload.createdAt; }
@@ -138,6 +158,7 @@ export const useStore = create<KwentaKoStore>()(
         set((s) => ({
           accounts: s.accounts.filter((a) => a.id !== id),
         }));
+        if (!navigator.onLine) { get()._queueMutation('delete_account', { id }); return; }
         supabase.from('accounts').delete().eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
@@ -146,6 +167,7 @@ export const useStore = create<KwentaKoStore>()(
         set((s) => ({
           transactions: [...s.transactions, transaction],
         }));
+        if (!navigator.onLine) { get()._queueMutation('add_transaction', { transaction }); return; }
         supabase.from('transactions').insert({
           client_id: transaction.id,
           type: transaction.type,
@@ -181,7 +203,7 @@ export const useStore = create<KwentaKoStore>()(
             t.id === id ? { ...t, ...updates, updatedAt } : t,
           ),
         }));
-        
+        if (!navigator.onLine) { get()._queueMutation('update_transaction', { id, updates }); return; }
         const payload: any = { ...updates, updated_at: updatedAt };
         if ('accountId' in payload) { payload.account_id = payload.accountId; delete payload.accountId; }
         if ('toAccountId' in payload) { payload.to_account_id = payload.toAccountId; delete payload.toAccountId; }
@@ -195,6 +217,7 @@ export const useStore = create<KwentaKoStore>()(
         set((s) => ({
           transactions: s.transactions.filter((t) => t.id !== id),
         }));
+        if (!navigator.onLine) { get()._queueMutation('delete_transaction', { id }); return; }
         supabase.from('transactions').delete().eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
@@ -210,6 +233,7 @@ export const useStore = create<KwentaKoStore>()(
       // ── Category Actions
       addCategory: (category) => {
         set((s) => ({ categories: [...s.categories, category] }));
+        if (!navigator.onLine) { get()._queueMutation('add_category', { category }); return; }
         supabase.from('categories').insert({
           client_id: category.id, name: category.name, icon: category.icon,
           color: category.color, type: category.type, is_default: category.isDefault,
@@ -223,6 +247,7 @@ export const useStore = create<KwentaKoStore>()(
             c.id === id ? { ...c, ...updates } : c,
           ),
         }));
+        if (!navigator.onLine) { get()._queueMutation('update_category', { id, updates }); return; }
         const payload: any = { ...updates };
         if ('isDefault' in payload) { payload.is_default = payload.isDefault; delete payload.isDefault; }
         if ('isActive' in payload) { payload.is_active = payload.isActive; delete payload.isActive; }
@@ -234,6 +259,7 @@ export const useStore = create<KwentaKoStore>()(
         set((s) => ({
           categories: s.categories.filter((c) => c.id !== id),
         }));
+        if (!navigator.onLine) { get()._queueMutation('delete_category', { id }); return; }
         supabase.from('categories').delete().eq('client_id', id).then(({ error }: any) => error && console.error(error));
       },
 
@@ -309,6 +335,99 @@ export const useStore = create<KwentaKoStore>()(
         supabase.auth.getUser().then(({ data }: any) => {
           if (data.user) supabase.from('profiles').update({ theme }).eq('id', data.user.id).then(({ error }: any) => error && console.error(error));
         });
+      },
+
+      // ── Recurring Actions
+      addRecurring: (r) => set((s) => ({ recurrings: [...s.recurrings, r] })),
+      updateRecurring: (id, updates) => set((s) => ({
+        recurrings: s.recurrings.map((r) => r.id === id ? { ...r, ...updates } : r),
+      })),
+      deleteRecurring: (id) => set((s) => ({
+        recurrings: s.recurrings.filter((r) => r.id !== id),
+      })),
+
+      applyDueRecurrings: () => {
+        const { recurrings, transactions } = get();
+        const today = startOfDay(new Date());
+        const todayISO = format(today, 'yyyy-MM-dd');
+
+        for (const r of recurrings) {
+          if (!r.isActive) continue;
+          const lastApplied = r.lastAppliedDate
+            ? startOfDay(parseISO(r.lastAppliedDate))
+            : startOfDay(parseISO(r.startDate));
+
+          let nextDate = lastApplied;
+          const toCreate: Date[] = [];
+
+          // Walk forward from lastApplied to today, collecting due dates
+          let safety = 0;
+          while (isBefore(nextDate, today) && safety < 366) {
+            safety++;
+            if (r.frequency === 'daily') nextDate = addDays(nextDate, 1);
+            else if (r.frequency === 'weekly') nextDate = addWeeks(nextDate, 1);
+            else nextDate = addMonths(nextDate, 1);
+
+            if (!isBefore(nextDate, today) && nextDate.toDateString() !== today.toDateString()) break;
+
+            // Avoid duplicates — check if a txn with same recurringId + date exists
+            const alreadyExists = transactions.some(
+              (t) => t.note?.includes(`[rec:${r.id}]`) && t.date.startsWith(format(nextDate, 'yyyy-MM-dd'))
+            );
+            if (!alreadyExists) toCreate.push(nextDate);
+          }
+
+          if (toCreate.length === 0) continue;
+
+          const now = new Date().toISOString();
+          for (const d of toCreate) {
+            const txn: Transaction = {
+              id: crypto.randomUUID(),
+              type: r.type,
+              amount: r.amount,
+              accountId: r.accountId,
+              toAccountId: r.toAccountId,
+              categoryId: r.categoryId,
+              note: `${r.note ? r.note + ' ' : ''}[rec:${r.id}]`,
+              date: d.toISOString(),
+              createdAt: now,
+              updatedAt: now,
+            };
+            get().addTransaction(txn);
+          }
+
+          // Update lastAppliedDate
+          get().updateRecurring(r.id, { lastAppliedDate: todayISO });
+        }
+      },
+
+      // ── Offline Queue (internal helper — not exposed in interface directly)
+      _queueMutation: (op: string, payload: Record<string, unknown>) => {
+        const mutation: PendingMutation = {
+          id: crypto.randomUUID(),
+          op: op as any,
+          payload,
+          createdAt: new Date().toISOString(),
+        };
+        set((s) => ({ offlineQueue: [...s.offlineQueue, mutation] }));
+      },
+
+      flushOfflineQueue: async () => {
+        const queue = get().offlineQueue;
+        if (queue.length === 0) return;
+
+        const failed: PendingMutation[] = [];
+        for (const mutation of queue) {
+          try {
+            await applyMutation(mutation);
+          } catch {
+            failed.push(mutation);
+          }
+        }
+        set({ offlineQueue: failed });
+        if (failed.length === 0 && queue.length > 0) {
+          get().showToast(`${queue.length} change${queue.length !== 1 ? 's' : ''} synced ✓`, 'success');
+        }
       },
 
       clearAllData: () => {
@@ -412,14 +531,68 @@ export const useStore = create<KwentaKoStore>()(
         transactions: s.transactions,
         categories: s.categories,
         budgets: s.budgets,
+        recurrings: s.recurrings,
+        offlineQueue: s.offlineQueue,
         settings: s.settings,
         balanceVisible: s.balanceVisible,
+        userId: s.userId,
       }),
     },
   ),
 );
 
-// ─── Selector Hooks (for performance) ────────────────────────────────────────
+// ─── applyMutation ───────────────────────────────────────────────────────────────
+
+async function applyMutation(mutation: PendingMutation): Promise<void> {
+  const { op, payload } = mutation;
+  if (op === 'add_transaction') {
+    const t = payload.transaction as Transaction;
+    await supabase.from('transactions').insert({
+      client_id: t.id, type: t.type, amount: t.amount, account_id: t.accountId,
+      to_account_id: t.toAccountId, category_id: t.categoryId, note: t.note,
+      date: t.date, transfer_group_id: t.transferGroupId, created_at: t.createdAt, updated_at: t.updatedAt,
+    });
+  } else if (op === 'update_transaction') {
+    const { id, updates } = payload as { id: string; updates: any };
+    const p: any = { ...updates, updated_at: new Date().toISOString() };
+    if ('accountId' in p) { p.account_id = p.accountId; delete p.accountId; }
+    if ('toAccountId' in p) { p.to_account_id = p.toAccountId; delete p.toAccountId; }
+    if ('categoryId' in p) { p.category_id = p.categoryId; delete p.categoryId; }
+    await supabase.from('transactions').update(p).eq('client_id', id);
+  } else if (op === 'delete_transaction') {
+    await supabase.from('transactions').delete().eq('client_id', payload.id);
+  } else if (op === 'add_account') {
+    const a = payload.account as Account;
+    await supabase.from('accounts').insert({
+      client_id: a.id, name: a.name, type: a.type, currency: a.currency,
+      icon: a.icon, color: a.color, is_active: a.isActive, created_at: a.createdAt,
+    });
+  } else if (op === 'update_account') {
+    const { id, updates } = payload as { id: string; updates: any };
+    const p: any = { ...updates };
+    if ('isActive' in p) { p.is_active = p.isActive; delete p.isActive; }
+    await supabase.from('accounts').update(p).eq('client_id', id);
+  } else if (op === 'delete_account') {
+    await supabase.from('accounts').delete().eq('client_id', payload.id);
+  } else if (op === 'add_category') {
+    const c = payload.category as Category;
+    await supabase.from('categories').insert({
+      client_id: c.id, name: c.name, icon: c.icon, color: c.color,
+      type: c.type, is_default: c.isDefault, is_active: c.isActive, sort_order: c.sortOrder,
+    });
+  } else if (op === 'update_category') {
+    const { id, updates } = payload as { id: string; updates: any };
+    const p: any = { ...updates };
+    if ('isDefault' in p) { p.is_default = p.isDefault; delete p.isDefault; }
+    if ('isActive' in p) { p.is_active = p.isActive; delete p.isActive; }
+    if ('sortOrder' in p) { p.sort_order = p.sortOrder; delete p.sortOrder; }
+    await supabase.from('categories').update(p).eq('client_id', id);
+  } else if (op === 'delete_category') {
+    await supabase.from('categories').delete().eq('client_id', payload.id);
+  }
+}
+
+// ─── Selector Hooks (for performance) ────────────────────────────────────────────────
 
 export const useAccounts = () => useStore((s) => s.accounts);
 export const useTransactions = () => useStore((s) => s.transactions);
@@ -429,3 +602,5 @@ export const useToasts = () => useStore((s) => s.toasts);
 export const useIsAddSheetOpen = () => useStore((s) => s.isAddSheetOpen);
 export const useEditingTransactionId = () => useStore((s) => s.editingTransactionId);
 export const useUserId = () => useStore((s) => s.userId);
+export const useRecurrings = () => useStore((s) => s.recurrings);
+export const useOfflineQueue = () => useStore((s) => s.offlineQueue);

@@ -9,11 +9,17 @@ export type AccountType =
   | 'investment'
   | 'other';
 
+export type CurrencyCode = 'PHP' | 'USD' | 'EUR' | 'JPY' | 'GBP' | 'SGD' | 'AUD';
+
+export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
+  PHP: '₱', USD: '$', EUR: '€', JPY: '¥', GBP: '£', SGD: 'S$', AUD: 'A$',
+};
+
 export interface Account {
   id: string;
   name: string;
   type: AccountType;
-  currency: 'PHP';
+  currency: CurrencyCode;
   icon: string;       // FA class e.g. "fa-money-bill-wave"
   color: string;      // hex
   isActive: boolean;
@@ -89,3 +95,34 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info';
 }
 
+// ─── Offline Queue ───────────────────────────────────────────────────────────
+
+export type MutationOp = 'add_transaction' | 'update_transaction' | 'delete_transaction'
+  | 'add_account' | 'update_account' | 'delete_account'
+  | 'add_category' | 'update_category' | 'delete_category';
+
+export interface PendingMutation {
+  id: string;
+  op: MutationOp;
+  payload: Record<string, unknown>;
+  createdAt: string;
+}
+
+// ─── Recurring Transactions ──────────────────────────────────────────────────
+
+export type RecurringFrequency = 'daily' | 'weekly' | 'monthly';
+
+export interface RecurringTransaction {
+  id: string;
+  type: TransactionType;
+  amount: number;           // centavos
+  accountId: string;
+  toAccountId?: string;
+  categoryId: string;
+  note?: string;
+  frequency: RecurringFrequency;
+  startDate: string;        // ISO — when to start generating
+  lastAppliedDate?: string; // ISO — last date a txn was auto-created
+  isActive: boolean;
+  createdAt: string;
+}
