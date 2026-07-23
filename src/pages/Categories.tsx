@@ -1,7 +1,22 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import type { DropResult } from '@hello-pangea/dnd';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useStore } from '../store/useStore';
 import EmptyState from '../components/ui/EmptyState';
 import type { Category, CategoryType } from '../types';
@@ -405,20 +420,94 @@ function CategoryForm({
   );
 };
 
-export default function Categories() {
-  const { categories, addCategory, updateCategory, deleteCategory, reorderCategory, showToast } = useStore();
-  const [showForm,    setShowForm]    = useState(false);
-  const [editingCat,  setEditingCat]  = useState<Category | null>(null);
-  const [actionMenuCat, setActionMenuCat] = useState<Category | null>(null);
-  const [filterType,  setFilterType]  = useState<CategoryType | 'all'>('all');
+function SortableCategoryItem({
+  cat,
+  filterType,
+  openActionMenu,
+}: {
+  cat: Category;
+  filterType: string;
+  openActionMenu: (cat: Category) => void;
+}) {
+  const disabled = filterType !== 'all';
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: cat.id, disabled });
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    background: 'var(--surface)',
+    boxShadow: isDragging ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
+    border: '1px solid var(--divider)',
+    zIndex: isDragging ? 50 : 'auto',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 p-3 rounded-2xl transition-shadow"
+    >
+      <button
+        className="flex items-center gap-3 flex-1 text-left"
+        onClick={() => openActionMenu(cat)}
+      >
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: `${cat.color}18` }}
+        >
+          <i className={`fa-solid ${cat.icon} text-sm`} style={{ color: cat.color }} />
+        </div>
+        <div className="flex-1">
+          <p className="font-semibold" style={{ color: 'var(--text-1)' }}>
+            {cat.name}
+          </p>
+          <p className="text-xs capitalize" style={{ color: 'var(--text-3)' }}>
+            {cat.type}
+          </p>
+        </div>
+      </button>
+
+      <div
+        {...attributes}
+        {...listeners}
+        className={`p-2 shrink-0 ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+        style={{ color: 'var(--text-3)', touchAction: 'none' }}
+      >
+        <i className="fa-solid fa-bars text-lg" />
+      </div>
+    </div>
+  );
+}
+
+export default function Categories() {
+  const categories      = useStore((s) => s.categories);
+  const addCategory     = useStore((s) => s.addCategory);
+  const updateCategory  = useStore((s) => s.updateCategory);
+  const deleteCategory  = useStore((s) => s.deleteCategory);
+  const reorderCategory = useStore((s) => s.reorderCategory);
+  const showToast       = useStore((s) => s.showToast);
+
+  const [filterType,    setFilterType]    = useState<'all' | CategoryType>('all');
+  const [showForm,      setShowForm]      = useState(false);
+  const [editingCat,    setEditingCat]    = useState<Category | null>(null);
+  const [actionMenuCat, setActionMenuCat] = useState<Category | null>(null);
 
   const filtered = categories
-    .filter((c) => filterType === 'all' || c.type === filterType)
-    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    .filter((c) => filterType === 'all' || c.type === filterType || c.type === 'both')
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const handleSave = (data: Omit<Category, 'id' | 'sortOrder'>) => {
     if (editingCat) {
@@ -444,10 +533,20 @@ export default function Categories() {
     setActionMenuCat(cat);
   };
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-    reorderCategory(result.source.index, result.destination.index);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = filtered.findIndex((c) => c.id === active.id);
+      const newIndex = filtered.findIndex((c) => c.id === over.id);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        reorderCategory(oldIndex, newIndex);
+      }
+    }
   };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen pb-20 animate-fade-in" style={{ background: 'var(--bg)' }}>
@@ -495,70 +594,20 @@ export default function Categories() {
             onAction={() => setShowForm(true)}
           />
         ) : (
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="categories-list">
-              {(provided: any) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="flex flex-col gap-2"
-                >
-                  {filtered.map((cat, index) => (
-                    <Draggable
-                      key={cat.id}
-                      draggableId={cat.id}
-                      index={index}
-                      isDragDisabled={filterType !== 'all'}
-                    >
-                      {(provided: any, snapshot: any) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className="flex items-center gap-3 p-3 rounded-2xl transition-shadow"
-                          style={{
-                            background: 'var(--surface)',
-                            boxShadow: snapshot.isDragging ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
-                            border: '1px solid var(--divider)',
-                            zIndex: snapshot.isDragging ? 50 : 'auto',
-                            ...provided.draggableProps.style,
-                          }}
-                        >
-                          <button
-                            className="flex items-center gap-3 flex-1 text-left"
-                            onClick={() => openActionMenu(cat)}
-                          >
-                            <div
-                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: `${cat.color}18` }}
-                            >
-                              <i className={`fa-solid ${cat.icon} text-sm`} style={{ color: cat.color }} />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>
-                                {cat.name}
-                              </p>
-                              <p className="text-xs capitalize" style={{ color: 'var(--text-3)' }}>
-                                {cat.type}
-                              </p>
-                            </div>
-                          </button>
-
-                          <div
-                            {...provided.dragHandleProps}
-                            className={`p-2 shrink-0 ${filterType !== 'all' ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                            style={{ color: 'var(--text-3)', touchAction: 'none' }}
-                          >
-                            <i className="fa-solid fa-bars text-lg" />
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={filtered.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+              <div className="flex flex-col gap-2">
+                {filtered.map((cat) => (
+                  <SortableCategoryItem
+                    key={cat.id}
+                    cat={cat}
+                    filterType={filterType}
+                    openActionMenu={openActionMenu}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 

@@ -20,6 +20,47 @@ import type {
 } from '../types';
 import { DEFAULT_ACCOUNTS, DEFAULT_CATEGORIES } from '../utils/seedData';
 import { supabase } from '../lib/supabase';
+import { get, set, del } from 'idb-keyval';
+
+// ─── Custom Async IndexedDB Storage Engine (idb-keyval) ─────────────────────
+
+const idbStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    try {
+      const val = await get<string>(name);
+      if (val) return val;
+
+      // Migration fallback from legacy localStorage
+      const legacyVal = localStorage.getItem(name);
+      if (legacyVal) {
+        console.log(`[Storage Migration] Migrating ${name} from localStorage to IndexedDB`);
+        await set(name, legacyVal);
+        localStorage.removeItem(name);
+        return legacyVal;
+      }
+      return null;
+    } catch (err) {
+      console.warn('IndexedDB read error, falling back to localStorage:', err);
+      return localStorage.getItem(name);
+    }
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    try {
+      await set(name, value);
+    } catch (err) {
+      console.warn('IndexedDB write error, falling back to localStorage:', err);
+      localStorage.setItem(name, value);
+    }
+  },
+  removeItem: async (name: string): Promise<void> => {
+    try {
+      await del(name);
+    } catch (err) {
+      console.warn('IndexedDB delete error, falling back to localStorage:', err);
+      localStorage.removeItem(name);
+    }
+  },
+};
 
 // ─── Store Shape ──────────────────────────────────────────────────────────────
 
@@ -524,7 +565,7 @@ export const useStore = create<KwentaKoStore>()(
     }),
     {
       name: 'kwentako-store',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => idbStorage),
       // Don't persist UI state
       partialize: (s) => ({
         accounts: s.accounts,

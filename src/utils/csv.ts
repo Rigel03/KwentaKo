@@ -52,7 +52,7 @@ export function downloadCSV(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-// \u2500\u2500\u2500 XLSX EXPORT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── EXCELJS EXPORT ───────────────────────────────────────────────────────────
 
 export async function exportTransactionsXLSX(
   transactions: Transaction[],
@@ -60,35 +60,54 @@ export async function exportTransactionsXLSX(
   categories: Category[],
   filename: string,
 ): Promise<void> {
-  // Dynamic import so xlsx is not in the critical bundle
-  const XLSX = await import('xlsx');
+  // Dynamic import so exceljs is not in the critical bundle
+  const ExcelJS = await import('exceljs');
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Transactions');
+
+  worksheet.columns = [
+    { header: 'Date', key: 'date', width: 14 },
+    { header: 'Time', key: 'time', width: 10 },
+    { header: 'Type', key: 'type', width: 12 },
+    { header: 'Amount (PHP)', key: 'amount', width: 16 },
+    { header: 'Account', key: 'account', width: 20 },
+    { header: 'To Account', key: 'toAccount', width: 20 },
+    { header: 'Category', key: 'category', width: 20 },
+    { header: 'Note', key: 'note', width: 32 },
+    { header: 'ID', key: 'id', width: 38 },
+  ];
 
   const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
-  const rows = transactions
+  transactions
     .sort((a, b) => b.date.localeCompare(a.date))
-    .map((t) => ({
-      Date: format(parseISO(t.date), 'yyyy-MM-dd'),
-      Time: format(parseISO(t.date), 'HH:mm'),
-      Type: t.type.charAt(0).toUpperCase() + t.type.slice(1),
-      'Amount (PHP)': t.amount / 100,
-      Account: accountMap.get(t.accountId) ?? t.accountId,
-      'To Account': t.toAccountId ? (accountMap.get(t.toAccountId) ?? t.toAccountId) : '',
-      Category: categoryMap.get(t.categoryId) ?? t.categoryId,
-      Note: t.note ?? '',
-      ID: t.id,
-    }));
+    .forEach((t) => {
+      worksheet.addRow({
+        date: format(parseISO(t.date), 'yyyy-MM-dd'),
+        time: format(parseISO(t.date), 'HH:mm'),
+        type: t.type.charAt(0).toUpperCase() + t.type.slice(1),
+        amount: t.amount / 100,
+        account: accountMap.get(t.accountId) ?? t.accountId,
+        toAccount: t.toAccountId ? (accountMap.get(t.toAccountId) ?? t.toAccountId) : '',
+        category: categoryMap.get(t.categoryId) ?? t.categoryId,
+        note: t.note ?? '',
+        id: t.id,
+      });
+    });
 
-  const ws = XLSX.utils.json_to_sheet(rows);
-  // Set column widths
-  ws['!cols'] = [
-    { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 14 },
-    { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 30 }, { wch: 36 },
-  ];
+  // Style header row
+  worksheet.getRow(1).font = { bold: true };
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
-  XLSX.writeFile(wb, filename);
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
-
